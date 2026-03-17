@@ -205,6 +205,17 @@ function AppContent() {
           <button className="md:hidden p-2" onClick={() => setMenuOpen(!menuOpen)}>
             {menuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
+          {/* Mobile Cart/Wishlist - Visible on top right */}
+          <div className="flex items-center gap-2 md:hidden">
+            <button className="relative p-2 opacity-60 hover:opacity-100 transition-all" onClick={() => isLoggedIn ? setWishlistOpen(true) : setLoginPromptOpen(true)}>
+              <Heart size={22} className={wishlist.length > 0 ? "fill-[#ff004c] text-[#ff004c]" : ""} />
+              {wishlist.length > 0 && <span className="absolute -top-1 -right-1 bg-[#ff004c] text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-black">{wishlist.length}</span>}
+            </button>
+            <button className="relative p-2" onClick={() => isLoggedIn ? setCartOpen(true) : setLoginPromptOpen(true)}>
+              <ShoppingBag size={22} />
+              {cart.length > 0 && <span className="absolute -top-1 -right-1 bg-[#ff004c] text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-black animate-pulse">{cart.length}</span>}
+            </button>
+          </div>
           <div className="hidden md:flex items-center gap-6">
             <button className="relative p-2 opacity-60 hover:opacity-100 transition-all" onClick={() => isLoggedIn ? setWishlistOpen(true) : setLoginPromptOpen(true)}>
               <Heart size={22} className={wishlist.length > 0 ? "fill-[#ff004c] text-[#ff004c]" : ""} />
@@ -1030,10 +1041,16 @@ function AppContent() {
                           </div>
                         </button>
 
-                        <div className={`transition-all duration-500 ease-in-out ${isSabbpeActive ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0 pointer-events-none'}`}>
+                        {/* Mobile Payment Notice */}
+                        <div className="md:hidden p-6 bg-white/5 rounded-2xl border border-white/10 text-center">
+                          <p className="text-sm opacity-60 mb-4">Payment is available on desktop website only.</p>
+                          <p className="text-xs opacity-40">Please visit our website on a computer to complete your purchase.</p>
+                        </div>
+
+                        <div className={`hidden md:block transition-all duration-500 ease-in-out ${isSabbpeActive ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0 pointer-events-none'}`}>
                           <div className="p-8 space-y-4 pt-0">
-                            {/* Payment Options Grid */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {/* Payment Options Grid - Hidden on mobile */}
+                            <div className="hidden md:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                               {[
                                 { id: 'sabbpe_card', name: 'Credit/Debit Card', icon: <CreditCard size={20} /> },
                                 { id: 'sabbpe_upi', name: 'UPI / Apps', icon: <Phone size={20} /> },
@@ -1053,8 +1070,8 @@ function AppContent() {
                               ))}
                             </div>
 
-                            {/* Detailed Input Sections */}
-                            <div className="mt-8 transition-all duration-500 overflow-hidden">
+                            {/* Detailed Input Sections - Hidden on mobile */}
+                            <div className="hidden md:block mt-8 transition-all duration-500 overflow-hidden">
                               {(selectedPaymentOption === 'sabbpe_card') && (
                                 <div className="space-y-6 bg-white/5 p-8 rounded-3xl border border-white/10 animate-in fade-in slide-in-from-top-4 duration-500">
                                    <h5 className="text-white font-black text-sm uppercase tracking-widest flex items-center gap-3">
