@@ -290,8 +290,8 @@ export default function Register() {
                   We've sent a 6-digit OTP to <span className="text-cyan-400">+91 {formData.phone}</span>
                 </p>
 
-                <div className="space-y-4">
-                  <div className="flex justify-center gap-2">
+                <div className="space-y-6">
+                  <div className="flex justify-center gap-3">
                     {otp.map((digit, index) => (
                       <input
                         key={index}
@@ -302,7 +302,7 @@ export default function Register() {
                         value={digit}
                         onChange={(e) => handleOtpChange(index, e.target.value)}
                         onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                        className="w-12 h-14 bg-slate-700/50 border border-slate-600 rounded-xl text-center text-white text-xl font-bold focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all"
+                        className="w-14 h-16 bg-slate-700/50 border-2 border-slate-600 rounded-2xl text-center text-white text-2xl font-bold focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 transition-all shadow-lg"
                       />
                     ))}
                   </div>

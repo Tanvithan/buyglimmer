@@ -126,6 +126,11 @@ function AppContent() {
   const [couponCode, setCouponCode] = useState('')
   const [isCouponApplied, setIsCouponApplied] = useState(false)
   const [isSabbpeActive, setIsSabbpeActive] = useState(false)
+  const [savedAddresses, setSavedAddresses] = useState([
+    { id: 1, name: 'John Doe', address: '123 Fashion Street, Bandra', city: 'Mumbai', state: 'Maharashtra', pincode: '400001', phone: '+91 98765 43210', isDefault: true }
+  ])
+  const [showAddAddress, setShowAddAddress] = useState(false)
+  const [selectedSavedAddress, setSelectedSavedAddress] = useState<number | null>(1)
 
   const banks = [
     'State Bank of India', 'HDFC Bank', 'ICICI Bank', 'Axis Bank', 
@@ -879,6 +884,15 @@ function AppContent() {
                   <div className="flex-1">
                     <h4 className="font-bold text-sm mb-1">{item.name}</h4>
                     <p className="text-[#ff004c] font-black">₹{item.price}</p>
+                    {item.color && (
+                      <p className="text-xs opacity-60 flex items-center gap-1 mt-1">
+                        <span className="w-3 h-3 rounded-full border border-white/20" style={{ backgroundColor: item.colorHex || item.color }}></span>
+                        {item.color}
+                      </p>
+                    )}
+                    {item.size && (
+                      <p className="text-xs opacity-60 mt-1">Size: {item.size}</p>
+                    )}
                   </div>
                   <Trash2 size={16} onClick={() => setCart(cart.filter((_, idx) => idx !== i))} className="cursor-pointer opacity-30 hover:opacity-100 transition-all" />
                 </div>
@@ -923,60 +937,101 @@ function AppContent() {
                 {checkoutStep === 1 && (
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-8">
                     <div className="space-y-3 md:space-y-4">
-                      <h3 className="text-sm font-black uppercase tracking-widest opacity-60 mb-3 md:mb-4">Delivery Address</h3>
-                      <input
-                        type="text"
-                        placeholder="Full Name"
-                        value={shippingInfo.name}
-                        onChange={(e) => setShippingInfo({ ...shippingInfo, name: e.target.value })}
-                        className="w-full p-4 bg-white/5 border border-white/10 rounded-xl outline-none focus:border-[#ff004c] transition-all"
-                      />
-                      <input
-                        type="text"
-                        placeholder="Address (House No., Street, Area)"
-                        value={shippingInfo.address}
-                        onChange={(e) => setShippingInfo({ ...shippingInfo, address: e.target.value })}
-                        className="w-full p-4 bg-white/5 border border-white/10 rounded-xl outline-none focus:border-[#ff004c] transition-all"
-                      />
-                      <div className="grid grid-cols-2 gap-4">
-                        <input
-                          type="text"
-                          placeholder="City"
-                          value={shippingInfo.city}
-                          onChange={(e) => setShippingInfo({ ...shippingInfo, city: e.target.value })}
-                          className="w-full p-4 bg-white/5 border border-white/10 rounded-xl outline-none focus:border-[#ff004c] transition-all"
-                        />
-                        <input
-                          type="text"
-                          placeholder="State"
-                          value={shippingInfo.state}
-                          onChange={(e) => setShippingInfo({ ...shippingInfo, state: e.target.value })}
-                          className="w-full p-4 bg-white/5 border border-white/10 rounded-xl outline-none focus:border-[#ff004c] transition-all"
-                        />
+                      <h3 className="text-sm font-black uppercase tracking-widest opacity-60 mb-3 md:mb-4">Saved Addresses</h3>
+                      
+                      {/* Saved Addresses List */}
+                      <div className="space-y-3 mb-4">
+                        {savedAddresses.map((addr) => (
+                          <div 
+                            key={addr.id}
+                            onClick={() => { setSelectedSavedAddress(addr.id); setShippingInfo({ name: addr.name, address: addr.address, city: addr.city, state: addr.state, pincode: addr.pincode, phone: addr.phone, email: '' }); }}
+                            className={`p-4 rounded-xl border cursor-pointer transition-all ${
+                              selectedSavedAddress === addr.id 
+                                ? 'bg-[#ff004c]/10 border-[#ff004c] text-white' 
+                                : 'bg-white/5 border-white/10 text-white/70 hover:border-white/20'
+                            }`}
+                          >
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <p className="font-bold text-sm">{addr.name} {addr.isDefault && <span className="text-[#ff004c] text-xs">(Default)</span>}</p>
+                                <p className="text-xs opacity-60 mt-1">{addr.address}</p>
+                                <p className="text-xs opacity-60">{addr.city}, {addr.state} - {addr.pincode}</p>
+                                <p className="text-xs opacity-60">{addr.phone}</p>
+                              </div>
+                              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${selectedSavedAddress === addr.id ? 'border-[#ff004c] bg-[#ff004c]' : 'border-white/30'}`}>
+                                {selectedSavedAddress === addr.id && <div className="w-2 h-2 bg-white rounded-full" />}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <input
-                          type="text"
-                          placeholder="Pin Code"
-                          value={shippingInfo.pincode}
-                          onChange={(e) => setShippingInfo({ ...shippingInfo, pincode: e.target.value })}
-                          className="w-full p-4 bg-white/5 border border-white/10 rounded-xl outline-none focus:border-[#ff004c] transition-all"
-                        />
-                      </div>
-                      <input
-                        type="tel"
-                        placeholder="Phone Number"
-                        value={shippingInfo.phone}
-                        onChange={(e) => setShippingInfo({ ...shippingInfo, phone: e.target.value })}
-                        className="w-full p-4 bg-white/5 border border-white/10 rounded-xl outline-none focus:border-[#ff004c] transition-all"
-                      />
-                      <input
-                        type="email"
-                        placeholder="Email"
-                        value={shippingInfo.email}
-                        onChange={(e) => setShippingInfo({ ...shippingInfo, email: e.target.value })}
-                        className="w-full p-4 bg-white/5 border border-white/10 rounded-xl outline-none focus:border-[#ff004c] transition-all"
-                      />
+
+                      {/* Add New Address Button */}
+                      <button 
+                        onClick={() => { setSelectedSavedAddress(null); setShippingInfo({ name: '', address: '', city: '', state: '', pincode: '', phone: '', email: '' }); }}
+                        className="w-full p-4 border border-dashed border-white/20 rounded-xl text-white/60 hover:text-white hover:border-[#ff004c] transition-all flex items-center justify-center gap-2"
+                      >
+                        <span className="text-xl">+</span> Add New Address
+                      </button>
+
+                      {/* Address Form */}
+                      {(selectedSavedAddress === null || !savedAddresses.find(a => a.id === selectedSavedAddress)) && (
+                        <div className="space-y-3 mt-4">
+                          <input
+                            type="text"
+                            placeholder="Full Name"
+                            value={shippingInfo.name}
+                            onChange={(e) => setShippingInfo({ ...shippingInfo, name: e.target.value })}
+                            className="w-full p-4 bg-white/5 border border-white/10 rounded-xl outline-none focus:border-[#ff004c] transition-all"
+                          />
+                          <input
+                            type="text"
+                            placeholder="Address (House No., Street, Area)"
+                            value={shippingInfo.address}
+                            onChange={(e) => setShippingInfo({ ...shippingInfo, address: e.target.value })}
+                            className="w-full p-4 bg-white/5 border border-white/10 rounded-xl outline-none focus:border-[#ff004c] transition-all"
+                          />
+                          <div className="grid grid-cols-2 gap-4">
+                            <input
+                              type="text"
+                              placeholder="City"
+                              value={shippingInfo.city}
+                              onChange={(e) => setShippingInfo({ ...shippingInfo, city: e.target.value })}
+                              className="w-full p-4 bg-white/5 border border-white/10 rounded-xl outline-none focus:border-[#ff004c] transition-all"
+                            />
+                            <input
+                              type="text"
+                              placeholder="State"
+                              value={shippingInfo.state}
+                              onChange={(e) => setShippingInfo({ ...shippingInfo, state: e.target.value })}
+                              className="w-full p-4 bg-white/5 border border-white/10 rounded-xl outline-none focus:border-[#ff004c] transition-all"
+                            />
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            <input
+                              type="text"
+                              placeholder="Pin Code"
+                              value={shippingInfo.pincode}
+                              onChange={(e) => setShippingInfo({ ...shippingInfo, pincode: e.target.value })}
+                              className="w-full p-4 bg-white/5 border border-white/10 rounded-xl outline-none focus:border-[#ff004c] transition-all"
+                            />
+                          </div>
+                          <input
+                            type="tel"
+                            placeholder="Phone Number"
+                            value={shippingInfo.phone}
+                            onChange={(e) => setShippingInfo({ ...shippingInfo, phone: e.target.value })}
+                            className="w-full p-4 bg-white/5 border border-white/10 rounded-xl outline-none focus:border-[#ff004c] transition-all"
+                          />
+                          <input
+                            type="email"
+                            placeholder="Email"
+                            value={shippingInfo.email}
+                            onChange={(e) => setShippingInfo({ ...shippingInfo, email: e.target.value })}
+                            className="w-full p-4 bg-white/5 border border-white/10 rounded-xl outline-none focus:border-[#ff004c] transition-all"
+                          />
+                        </div>
+                      )}
                     </div>
                     <div>
                       <h3 className="text-sm font-black uppercase tracking-widest opacity-60 mb-4">Order Summary</h3>
