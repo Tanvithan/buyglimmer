@@ -1015,7 +1015,8 @@ function AppContent() {
                 {/* Step 2: Payment */}
                 {checkoutStep === 2 && (
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    <div className="space-y-6">
+                    {/* Mobile: Payment first, then order details */}
+                    <div className="order-1 lg:order-1 space-y-6">
                       {/* Payment Header */}
                       <div className="mt-12 mb-8">
                         <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-[#ff004c] mb-2 opacity-80">Choose Payment Gateway</h3>
@@ -1165,7 +1166,8 @@ function AppContent() {
 
                     </div>
 
-                    <div>
+                    {/* Mobile: Order details second */}
+                    <div className="order-2 lg:order-2">
                       <h3 className="text-sm font-black uppercase tracking-widest opacity-40 mb-4 ml-2">Ship to</h3>
                       <div className="bg-white/5 rounded-3xl p-6 border border-white/10 shadow-xl">
                         <p className="font-black text-lg">{shippingInfo.name}</p>
