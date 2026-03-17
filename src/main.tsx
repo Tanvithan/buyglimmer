@@ -129,7 +129,6 @@ function AppContent() {
   const [savedAddresses, setSavedAddresses] = useState([
     { id: 1, name: 'John Doe', address: '123 Fashion Street, Bandra', city: 'Mumbai', state: 'Maharashtra', pincode: '400001', phone: '+91 98765 43210', isDefault: true }
   ])
-  const [showAddAddress, setShowAddAddress] = useState(false)
   const [selectedSavedAddress, setSelectedSavedAddress] = useState<number | null>(1)
 
   const banks = [
@@ -936,10 +935,9 @@ function AppContent() {
                 {/* Step 1: Shipping */}
                 {checkoutStep === 1 && (
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-8">
-                    <div className="space-y-3 md:space-y-4">
-                      <h3 className="text-sm font-black uppercase tracking-widest opacity-60 mb-3 md:mb-4">Saved Addresses</h3>
-                      
-                      {/* Saved Addresses List */}
+                    {/* Order Summary - First on mobile */}
+                    <div className="order-1 lg:order-2">
+                      <h3 className="text-sm font-black uppercase tracking-widest opacity-60 mb-4">Order Summary</h3>
                       <div className="space-y-3 mb-4">
                         {savedAddresses.map((addr) => (
                           <div 
@@ -1066,7 +1064,22 @@ function AppContent() {
                         </div>
                       </div>
                       <button
-                        onClick={() => shippingInfo.name && shippingInfo.address && shippingInfo.phone ? setCheckoutStep(2) : alert('Please fill all required fields')}
+                        onClick={() => {
+                          // Save new address if not using saved one
+                          if (selectedSavedAddress === null && shippingInfo.name && shippingInfo.address) {
+                            setSavedAddresses([...savedAddresses, { 
+                              id: Date.now(), 
+                              name: shippingInfo.name, 
+                              address: shippingInfo.address, 
+                              city: shippingInfo.city, 
+                              state: shippingInfo.state, 
+                              pincode: shippingInfo.pincode, 
+                              phone: shippingInfo.phone,
+                              isDefault: false 
+                            }]);
+                          }
+                          shippingInfo.name && shippingInfo.address && shippingInfo.phone ? setCheckoutStep(2) : alert('Please fill all required fields')
+                        }}
                         className="mt-6 w-full py-5 bg-[#ff004c] text-white rounded-2xl font-black uppercase tracking-widest hover:brightness-110 transition-all"
                       >
                         Continue to Payment
