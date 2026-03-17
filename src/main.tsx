@@ -117,8 +117,7 @@ function AppContent() {
     },
   ])
   const [checkoutStep, setCheckoutStep] = useState(1)
-  const [shippingInfo, setShippingInfo] = useState({ name: '', address: '', city: '', pincode: '', phone: '', email: '' })
-  const [paymentMethod] = useState('sabbpe')
+  const [shippingInfo, setShippingInfo] = useState({ name: '', address: '', city: '', state: '', pincode: '', phone: '', email: '' })
   const [selectedOrder, setSelectedOrder] = useState<any>(null)
   const [orderDetailOpen, setOrderDetailOpen] = useState(false)
   const [upiScannerOpen, setUpiScannerOpen] = useState(false)
@@ -449,8 +448,8 @@ function AppContent() {
           {loginPromptOpen && (
             <>
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setLoginPromptOpen(false)} className="fixed inset-0 z-[70] bg-black/80 backdrop-blur-sm" />
-              <motion.div initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }} className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[80] w-full max-w-md p-6">
-                <div className="bg-slate-800/95 backdrop-blur-xl rounded-3xl p-8 shadow-2xl border border-slate-700/50">
+              <motion.div initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }} className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[80] w-full max-w-md p-4 sm:p-6">
+                <div className="bg-slate-800/95 backdrop-blur-xl rounded-2xl sm:rounded-3xl p-6 sm:p-8 shadow-2xl border border-slate-700/50">
                   <div className="text-center">
                     <div className="w-16 h-16 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
                       <User size={32} className="text-white" />
@@ -476,16 +475,16 @@ function AppContent() {
       {/* Profile Sidebar */}
       <AnimatePresence>
         {profileOpen && (
-          <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} transition={{ type: 'spring', damping: 25 }} className="fixed top-0 right-0 h-full w-full sm:w-[450px] z-[60] bg-[#08080c] border-l border-white/10 p-10 flex flex-col overflow-y-auto">
-            <div className="flex justify-between items-center mb-8">
-              <h2 className="text-xl font-black uppercase tracking-tighter">{profileSection === 'menu' ? 'Account' : profileSection === 'edit' ? 'Edit Profile' : 'My Orders'}</h2>
+          <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} transition={{ type: 'spring', damping: 25 }} className="fixed top-0 right-0 h-full w-full sm:w-[450px] z-[60] bg-[#08080c] border-l border-white/10 p-6 sm:p-10 flex flex-col overflow-y-auto">
+            <div className="flex justify-between items-center mb-6 sm:mb-8">
+              <h2 className="text-lg sm:text-xl font-black uppercase tracking-tighter">{profileSection === 'menu' ? 'Account' : profileSection === 'edit' ? 'Edit Profile' : 'My Orders'}</h2>
               <X onClick={() => { setProfileOpen(false); setProfileSection('menu'); }} className="cursor-pointer opacity-50 hover:opacity-100 hover:text-[#ff004c] transition-all" />
             </div>
 
             {profileSection === 'menu' ? (
               <>
-                <div className="flex items-center gap-6 mb-8">
-                  <div className="w-20 h-20 bg-[#ff004c] rounded-full flex items-center justify-center text-2xl font-black">{userProfile.avatar}</div>
+                <div className="flex items-center gap-4 sm:gap-6 mb-6 sm:mb-8">
+                  <div className="w-14 h-14 sm:w-20 sm:h-20 bg-[#ff004c] rounded-full flex items-center justify-center text-lg sm:text-2xl font-black">{userProfile.avatar}</div>
                   <div>
                     <h3 className="text-xl font-black">{userProfile.name}</h3>
                     <p className="text-sm opacity-40">{userProfile.email}</p>
@@ -588,7 +587,7 @@ function AppContent() {
                           onError={(e) => { (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1557821552-17105176677c?w=200'; }}
                         />
                         <div>
-                          <h4 className="font-bold text-sm">{order.items[0].name}</h4>
+                          <h4 className="font-bold text-sm text-white">{order.items[0].name}</h4>
                           <p className="text-[#ff004c] font-black">₹{order.total}</p>
                           {order.items[0].color && (
                             <p className="text-xs opacity-60 flex items-center gap-1 mt-1">
@@ -676,7 +675,7 @@ function AppContent() {
                           onError={(e) => { (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1557821552-17105176677c?w=200'; }}
                         />
                         <div className="flex-1">
-                          <h4 className="font-bold">{item.name}</h4>
+                          <h4 className="font-bold text-white">{item.name}</h4>
                           <p className="text-xs opacity-60 flex items-center gap-2 mt-1">
                             {item.color && (
                               <>
@@ -863,18 +862,18 @@ function AppContent() {
       {/* Cart Sidebar */}
       <AnimatePresence>
         {cartOpen && (
-          <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} transition={{ type: 'spring', damping: 25 }} className="fixed top-0 right-0 h-full w-full sm:w-[450px] z-[60] bg-[#08080c] border-l border-white/10 p-10 flex flex-col">
-            <div className="flex justify-between items-center mb-16">
-              <h2 className="text-xl font-black uppercase tracking-tighter">Shopping Bag ({cart.length})</h2>
+          <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} transition={{ type: 'spring', damping: 25 }} className="fixed top-0 right-0 h-full w-full sm:w-[450px] z-[60] bg-[#08080c] border-l border-white/10 p-6 sm:p-10 flex flex-col">
+            <div className="flex justify-between items-center mb-8 sm:mb-16">
+              <h2 className="text-lg sm:text-xl font-black uppercase tracking-tighter">Shopping Bag ({cart.length})</h2>
               <X onClick={() => setCartOpen(false)} className="cursor-pointer opacity-50 hover:opacity-100 hover:text-[#ff004c] transition-all" />
             </div>
-            <div className="flex-1 overflow-y-auto pr-2 space-y-8">
+            <div className="flex-1 overflow-y-auto pr-2 space-y-6 sm:space-y-8">
               {cart.map((item, i) => (
-                <div key={item.cartId} className="flex items-center gap-6 pb-6 border-b border-white/5">
+                <div key={item.cartId} className="flex items-center gap-3 sm:gap-6 pb-4 sm:pb-6 border-b border-white/5">
                   <img 
                     src={item.images[0]} 
                     alt="" 
-                    className="w-20 h-20 rounded-2xl object-cover"
+                    className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl sm:rounded-2xl object-cover"
                     onError={(e) => { (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1557821552-17105176677c?w=200'; }}
                   />
                   <div className="flex-1">
@@ -886,7 +885,7 @@ function AppContent() {
               ))}
               {cart.length === 0 && <p className="text-center opacity-30 mt-20">Your bag is empty.</p>}
             </div>
-            {cart.length > 0 && <button onClick={() => isLoggedIn ? setCheckoutOpen(true) : setLoginPromptOpen(true)} className="mt-auto w-full py-5 bg-[#ff004c] text-white rounded-2xl font-black uppercase tracking-widest hover:brightness-110 transition-all">Proceed to Checkout</button>}
+            {cart.length > 0 && <button onClick={() => isLoggedIn ? setCheckoutOpen(true) : setLoginPromptOpen(true)} className="mt-auto w-full py-4 sm:py-5 bg-[#ff004c] text-white rounded-xl sm:rounded-2xl font-black uppercase tracking-widest hover:brightness-110 transition-all text-sm sm:text-base">Proceed to Checkout</button>}
           </motion.div>
         )}
       </AnimatePresence>
@@ -947,6 +946,15 @@ function AppContent() {
                           onChange={(e) => setShippingInfo({ ...shippingInfo, city: e.target.value })}
                           className="w-full p-4 bg-white/5 border border-white/10 rounded-xl outline-none focus:border-[#ff004c] transition-all"
                         />
+                        <input
+                          type="text"
+                          placeholder="State"
+                          value={shippingInfo.state}
+                          onChange={(e) => setShippingInfo({ ...shippingInfo, state: e.target.value })}
+                          className="w-full p-4 bg-white/5 border border-white/10 rounded-xl outline-none focus:border-[#ff004c] transition-all"
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
                         <input
                           type="text"
                           placeholder="Pin Code"
@@ -1015,111 +1023,120 @@ function AppContent() {
                 {/* Step 2: Payment */}
                 {checkoutStep === 2 && (
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    {/* Mobile: Payment first, then order details */}
-                    <div className="order-1 lg:order-1 space-y-6">
+                    {/* Mobile: Order details first, then payment */}
+                    <div className="order-2 lg:order-1 space-y-6">
                       {/* Payment Header */}
-                      <div className="mt-12 mb-8">
+                      <div className="mt-6 lg:mt-12 mb-6 lg:mb-8">
                         <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-[#ff004c] mb-2 opacity-80">Choose Payment Gateway</h3>
                         <div className="h-1 w-12 bg-gradient-to-r from-[#ff004c] to-transparent rounded-full"></div>
                       </div>
 
                       {/* Pay with SABBPE - Main Container */}
-                      <div className={`rounded-[32px] border transition-all duration-500 overflow-hidden mb-6 ${isSabbpeActive ? 'bg-[#08080c] border-[#ff004c]/30 shadow-2xl' : 'bg-white/5 border-white/10 hover:border-[#ff004c]/30 shadow-none'}`}>
+                      <div className={`rounded-2xl lg:rounded-[32px] border transition-all duration-500 overflow-hidden mb-4 lg:mb-6 ${isSabbpeActive ? 'bg-[#08080c] border-[#ff004c]/30 shadow-2xl' : 'bg-white/5 border-white/10 hover:border-[#ff004c]/30 shadow-none'}`}>
                         <button 
                           onClick={() => setIsSabbpeActive(!isSabbpeActive)}
-                          className="w-full p-8 text-left transition-all relative group"
+                          className="w-full p-4 lg:p-8 text-left transition-all relative group"
                         >
-                          <div className="flex items-center gap-6">
-                            <div className={`w-16 h-16 rounded-2xl flex items-center justify-center transition-all duration-500 bg-[#0052FF] shadow-[0_8px_20px_-5px_rgba(0,82,255,0.4)]`}>
-                              <img src="https://cdn-icons-png.flaticon.com/512/3670/3670353.png" alt="SabbPe" className="w-10 h-10 brightness-0 invert" />
+                          <div className="flex items-center gap-3 lg:gap-6">
+                            <div className={`w-12 h-12 lg:w-16 lg:h-16 rounded-xl lg:rounded-2xl flex items-center justify-center transition-all duration-500 bg-[#0052FF] shadow-[0_8px_20px_-5px_rgba(0,82,255,0.4)]`}>
+                              <img src="https://cdn-icons-png.flaticon.com/512/3670/3670353.png" alt="SabbPe" className="w-6 h-6 lg:w-10 lg:h-10 brightness-0 invert" />
                             </div>
                             <div className="flex-1">
-                              <h4 className="font-black text-2xl uppercase tracking-wider text-white">SABBPE</h4>
+                              <h4 className="font-black text-lg lg:text-2xl uppercase tracking-wider text-white">SABBPE</h4>
                             </div>
-                            <div className={`ml-auto w-12 h-12 rounded-full border border-white/10 flex items-center justify-center transition-all duration-500 ${isSabbpeActive ? 'rotate-180 bg-[#ff004c]/10 border-[#ff004c]/30' : 'bg-white/5'}`}>
-                              <ChevronDown size={24} className={isSabbpeActive ? 'text-[#ff004c]' : 'text-white/40'} />
+                            <div className={`ml-auto w-10 h-10 lg:w-12 lg:h-12 rounded-full border border-white/10 flex items-center justify-center transition-all duration-500 ${isSabbpeActive ? 'rotate-180 bg-[#ff004c]/10 border-[#ff004c]/30' : 'bg-white/5'}`}>
+                              <ChevronDown size={20} className={isSabbpeActive ? 'text-[#ff004c]' : 'text-white/40'} />
                             </div>
                           </div>
                         </button>
 
-                        {/* Mobile Payment Notice */}
-                        <div className="md:hidden p-6 bg-white/5 rounded-2xl border border-white/10 text-center">
-                          <p className="text-sm opacity-60 mb-4">Payment is available on desktop website only.</p>
-                          <p className="text-xs opacity-40">Please visit our website on a computer to complete your purchase.</p>
-                        </div>
-
-                        <div className={`hidden md:block transition-all duration-500 ease-in-out ${isSabbpeActive ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0 pointer-events-none'}`}>
-                          <div className="p-8 space-y-4 pt-0">
-                            {/* Payment Options Grid - Hidden on mobile */}
-                            <div className="hidden md:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {/* Payment Details - Now visible on mobile */}
+                        <div className={`transition-all duration-500 ease-in-out ${isSabbpeActive ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0 pointer-events-none'}`}>
+                          <div className="p-4 lg:p-8 space-y-4 pt-0">
+                            {/* Payment Options Grid - Now visible on mobile */}
+                            <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 lg:gap-4">
                               {[
                                 { id: 'sabbpe_card', name: 'Credit/Debit Card', icon: <CreditCard size={20} /> },
                                 { id: 'sabbpe_upi', name: 'UPI / Apps', icon: <Phone size={20} /> },
                                 { id: 'sabbpe_netbanking', name: 'Net Banking', icon: <Building2 size={20} /> },
                                 { id: 'sabbpe_wallet', name: 'Wallets', icon: <Wallet size={20} /> },
+                                { id: 'sabbpe_cod', name: 'Cash on Delivery', icon: <Truck size={20} /> },
                               ].map(option => (
                                 <button 
                                   key={option.id}
                                   onClick={() => setSelectedPaymentOption(selectedPaymentOption === option.id ? '' : option.id)}
-                                  className={`p-6 rounded-2xl border transition-all flex flex-col items-center gap-3 ${selectedPaymentOption === option.id ? 'bg-[#ff004c]/10 border-[#ff004c] text-white shadow-lg' : 'bg-white/5 border-white/10 hover:border-white/20 text-white/60'}`}
+                                  className={`p-3 lg:p-6 rounded-xl lg:rounded-2xl border transition-all flex flex-col items-center gap-2 lg:gap-3 ${selectedPaymentOption === option.id ? 'bg-[#ff004c]/10 border-[#ff004c] text-white shadow-lg' : 'bg-white/5 border-white/10 hover:border-white/20 text-white/60'}`}
                                 >
                                   <div className={`${selectedPaymentOption === option.id ? 'text-[#ff004c]' : 'text-white/40'}`}>
                                     {option.icon}
                                   </div>
-                                  <span className="text-[10px] font-black uppercase tracking-[0.1em]">{option.name}</span>
+                                  <span className="text-[8px] lg:text-[10px] font-black uppercase tracking-[0.1em]">{option.name}</span>
                                 </button>
                               ))}
                             </div>
 
-                            {/* Detailed Input Sections - Hidden on mobile */}
-                            <div className="hidden md:block mt-8 transition-all duration-500 overflow-hidden">
+                            {/* Detailed Input Sections - Now visible on mobile */}
+                            <div className="mt-4 lg:mt-8 transition-all duration-500 overflow-hidden">
                               {(selectedPaymentOption === 'sabbpe_card') && (
-                                <div className="space-y-6 bg-white/5 p-8 rounded-3xl border border-white/10 animate-in fade-in slide-in-from-top-4 duration-500">
-                                   <h5 className="text-white font-black text-sm uppercase tracking-widest flex items-center gap-3">
-                                     <div className="w-1 h-4 bg-[#ff004c] rounded-full"></div> Enter Card Details
+                                <div className="space-y-4 lg:space-y-6 bg-white/5 p-4 lg:p-8 rounded-xl lg:rounded-3xl border border-white/10 animate-in fade-in slide-in-from-top-4 duration-500">
+                                   <h5 className="text-white font-black text-xs lg:text-sm uppercase tracking-widest flex items-center gap-2 lg:gap-3">
+                                     <div className="w-1 h-3 lg:h-4 bg-[#ff004c] rounded-full"></div> Enter Card Details
                                    </h5>
-                                   <div className="grid gap-4">
-                                     <input type="text" placeholder="Card Number" className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white outline-none focus:border-[#ff004c]/50 transition-all font-bold placeholder:text-white/20" />
-                                     <div className="grid grid-cols-2 gap-4">
-                                       <input type="text" placeholder="MM/YY" className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white outline-none focus:border-[#ff004c]/50 transition-all font-bold placeholder:text-white/20" />
-                                       <input type="password" placeholder="CVV" className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white outline-none focus:border-[#ff004c]/50 transition-all font-bold placeholder:text-white/20" />
+                                   <div className="grid gap-3 lg:gap-4">
+                                     <input type="text" placeholder="Card Number" className="w-full px-4 lg:px-6 py-3 lg:py-4 bg-white/5 border border-white/10 rounded-xl lg:rounded-2xl text-white outline-none focus:border-[#ff004c]/50 transition-all font-bold text-sm lg:placeholder:text-white/20" />
+                                     <div className="grid grid-cols-2 gap-3 lg:gap-4">
+                                       <input type="text" placeholder="MM/YY" className="w-full px-4 lg:px-6 py-3 lg:py-4 bg-white/5 border border-white/10 rounded-xl lg:rounded-2xl text-white outline-none focus:border-[#ff004c]/50 transition-all font-bold text-sm" />
+                                       <input type="password" placeholder="CVV" className="w-full px-4 lg:px-6 py-3 lg:py-4 bg-white/5 border border-white/10 rounded-xl lg:rounded-2xl text-white outline-none focus:border-[#ff004c]/50 transition-all font-bold text-sm" />
                                      </div>
                                    </div>
-                                   <button className="w-full bg-[#ff004c] py-5 rounded-2xl font-black text-white uppercase tracking-widest shadow-xl shadow-[#ff004c]/20 hover:scale-[1.02] transition-transform">Pay Securely</button>
+                                   <button className="w-full bg-[#ff004c] py-3 lg:py-5 rounded-xl lg:rounded-2xl font-black text-white uppercase tracking-widest shadow-xl shadow-[#ff004c]/20 hover:scale-[1.02] transition-transform text-xs lg:text-sm">Pay Securely</button>
                                 </div>
                               )}
 
                               {selectedPaymentOption === 'sabbpe_upi' && (
-                                <div className="space-y-6 bg-white/5 p-8 rounded-3xl border border-white/10 animate-in fade-in slide-in-from-top-4 duration-500">
-                                   <h5 className="text-white font-black text-sm uppercase tracking-widest flex items-center gap-3">
-                                     <div className="w-1 h-4 bg-[#ff004c] rounded-full"></div> Quick UPI Pay
+                                <div className="space-y-4 lg:space-y-6 bg-white/5 p-4 lg:p-8 rounded-xl lg:rounded-3xl border border-white/10 animate-in fade-in slide-in-from-top-4 duration-500">
+                                   <h5 className="text-white font-black text-xs lg:text-sm uppercase tracking-widest flex items-center gap-2 lg:gap-3">
+                                     <div className="w-1 h-3 lg:h-4 bg-[#ff004c] rounded-full"></div> Quick UPI Pay
                                    </h5>
-                                   <div className="flex gap-4">
-                                     <input type="text" placeholder="mobile@upi" className="flex-1 px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white outline-none focus:border-[#ff004c]/50 transition-all font-bold placeholder:text-white/20" />
-                                     <button className="px-8 bg-[#ff004c] text-white rounded-2xl font-black text-[10px] uppercase">Verify</button>
+                                   <div className="flex gap-2 lg:gap-4">
+                                     <input type="text" placeholder="mobile@upi" className="flex-1 px-3 lg:px-6 py-3 lg:py-4 bg-white/5 border border-white/10 rounded-xl lg:rounded-2xl text-white outline-none focus:border-[#ff004c]/50 transition-all font-bold text-sm" />
+                                     <button className="px-4 lg:px-8 bg-[#ff004c] text-white rounded-xl lg:rounded-2xl font-black text-[8px] lg:text-[10px] uppercase">Verify</button>
                                    </div>
-                                   <div className="grid grid-cols-3 gap-3">
-                                     {['PhonePe', 'GPay', 'Paytm'].map(app => (
-                                       <button key={app} onClick={() => setUpiScannerOpen(true)} className="p-4 bg-white/5 border border-white/10 rounded-2xl text-white/60 hover:text-white transition-all flex flex-col items-center gap-2">
-                                         <QrCode size={20} />
-                                         <span className="text-[8px] font-black uppercase">{app}</span>
-                                       </button>
+                                   <div className="grid grid-cols-3 gap-2 lg:gap-3">
+                                     {[
+                                       { name: 'PhonePe', url: 'phonepe://pay' },
+                                       { name: 'GPay', url: 'gpay://' },
+                                       { name: 'Paytm', url: 'paytmmp://pay' }
+                                     ].map(app => (
+                                       <a 
+                                         key={app.name} 
+                                         href={app.url}
+                                         onClick={() => {
+                                           // Try to open the app, fallback to scanner if not installed
+                                           window.location.href = app.url + `?pa=sabbpe@upi&pn=SABBPE&cu=INR&am=${cart.reduce((sum, item) => sum + item.price, 0)}`;
+                                           setTimeout(() => setUpiScannerOpen(true), 500);
+                                         }}
+                                         className="p-2 lg:p-4 bg-white/5 border border-white/10 rounded-xl lg:rounded-2xl text-white/60 hover:text-white transition-all flex flex-col items-center gap-1 lg:gap-2"
+                                       >
+                                         <QrCode size={16} />
+                                         <span className="text-[6px] lg:text-[8px] font-black uppercase">{app.name}</span>
+                                       </a>
                                      ))}
                                    </div>
                                 </div>
                               )}
 
                               {selectedPaymentOption === 'sabbpe_netbanking' && (
-                                <div className="space-y-6 bg-white/5 p-8 rounded-3xl border border-white/10 animate-in fade-in slide-in-from-top-4 duration-500">
-                                   <h5 className="text-white font-black text-sm uppercase tracking-widest flex items-center gap-3">
-                                     <div className="w-1 h-4 bg-[#ff004c] rounded-full"></div> Select Your Bank
+                                <div className="space-y-4 lg:space-y-6 bg-white/5 p-4 lg:p-8 rounded-xl lg:rounded-3xl border border-white/10 animate-in fade-in slide-in-from-top-4 duration-500">
+                                   <h5 className="text-white font-black text-xs lg:text-sm uppercase tracking-widest flex items-center gap-2 lg:gap-3">
+                                     <div className="w-1 h-3 lg:h-4 bg-[#ff004c] rounded-full"></div> Select Your Bank
                                    </h5>
-                                   <div className="grid grid-cols-2 gap-3">
+                                   <div className="grid grid-cols-2 gap-2 lg:gap-3">
                                       {banks.map(bank => (
                                         <button
                                           key={bank}
                                           onClick={() => setSelectedBank(bank)}
-                                          className={`p-4 text-[10px] font-black rounded-xl border transition-all text-left ${selectedBank === bank ? 'border-[#ff004c] bg-[#ff004c]/10 text-white' : 'border-white/10 bg-white/5 text-white/40'}`}
+                                          className={`p-2 lg:p-4 text-[8px] lg:text-[10px] font-black rounded-lg lg:rounded-xl border transition-all text-left ${selectedBank === bank ? 'border-[#ff004c] bg-[#ff004c]/10 text-white' : 'border-white/10 bg-white/5 text-white/40'}`}
                                         >
                                           {bank}
                                         </button>
@@ -1129,15 +1146,15 @@ function AppContent() {
                               )}
 
                               {selectedPaymentOption === 'sabbpe_wallet' && (
-                                <div className="space-y-6 bg-white/5 p-8 rounded-3xl border border-white/10 animate-in fade-in slide-in-from-top-4 duration-500">
-                                   <h5 className="text-white font-black text-sm uppercase tracking-widest flex items-center gap-3">
-                                     <div className="w-1 h-4 bg-[#ff004c] rounded-full"></div> Available Wallets
+                                <div className="space-y-4 lg:space-y-6 bg-white/5 p-4 lg:p-8 rounded-xl lg:rounded-3xl border border-white/10 animate-in fade-in slide-in-from-top-4 duration-500">
+                                   <h5 className="text-white font-black text-xs lg:text-sm uppercase tracking-widest flex items-center gap-2 lg:gap-3">
+                                     <div className="w-1 h-3 lg:h-4 bg-[#ff004c] rounded-full"></div> Available Wallets
                                    </h5>
-                                   <div className="grid gap-3">
+                                   <div className="grid gap-2 lg:gap-3">
                                       {['Amazon Pay', 'MobiKwik', 'PhonePe Wallet'].map(w => (
-                                        <button key={w} className="p-5 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-between hover:bg-white/10 transition-all font-black text-white/60 text-xs">
+                                        <button key={w} className="p-3 lg:p-5 bg-white/5 border border-white/10 rounded-xl lg:rounded-2xl flex items-center justify-between hover:bg-white/10 transition-all font-black text-white/60 text-[10px] lg:text-xs">
                                           {w}
-                                          <div className="w-4 h-4 rounded-full border border-white/20"></div>
+                                          <div className="w-3 lg:w-4 h-3 lg:h-4 rounded-full border border-white/20"></div>
                                         </button>
                                       ))}
                                    </div>
@@ -1149,59 +1166,59 @@ function AppContent() {
                       </div>
 
                       {/* Safe & Secure Card */}
-                      <div className="rounded-[32px] bg-white/5 border border-white/10 p-6 flex items-center justify-between group hover:border-green-500/30 transition-all">
-                        <div className="flex items-center gap-5">
-                          <div className="w-14 h-14 rounded-2xl bg-green-500/10 flex items-center justify-center border border-green-500/20 group-hover:bg-green-500 group-hover:text-white transition-all text-green-500">
-                            <Shield size={28} />
+                      <div className="rounded-2xl lg:rounded-[32px] bg-white/5 border border-white/10 p-4 lg:p-6 flex items-center justify-between group hover:border-green-500/30 transition-all">
+                        <div className="flex items-center gap-3 lg:gap-5">
+                          <div className="w-10 h-10 lg:w-14 lg:h-14 rounded-xl lg:rounded-2xl bg-green-500/10 flex items-center justify-center border border-green-500/20 group-hover:bg-green-500 group-hover:text-white transition-all text-green-500">
+                            <Shield size={20} />
                           </div>
                           <div>
-                            <h5 className="text-white font-black text-sm uppercase tracking-widest">Safe & Secure</h5>
-                            <p className="text-[10px] text-white/40 font-bold uppercase tracking-tight mt-0.5">256-bit SSL Encryption Ready</p>
+                            <h5 className="text-white font-black text-xs lg:text-sm uppercase tracking-widest">Safe & Secure</h5>
+                            <p className="text-[8px] lg:text-[10px] text-white/40 font-bold uppercase tracking-tight mt-0.5">256-bit SSL Encryption</p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-3">
-                           <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c0/UPI_Logo_%28vector%29.svg/1200px-UPI_Logo_%28vector%29.svg.png" className="h-2.5 opacity-40 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all" alt="UPI" />
+                        <div className="flex items-center gap-2 lg:gap-3">
+                           <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c0/UPI_Logo_%28vector%29.svg/1200px-UPI_Logo_%28vector%29.svg.png" className="h-2 lg:h-2.5 opacity-40 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all" alt="UPI" />
                         </div>
                       </div>
 
                     </div>
 
-                    {/* Mobile: Order details second */}
-                    <div className="order-2 lg:order-2">
-                      <h3 className="text-sm font-black uppercase tracking-widest opacity-40 mb-4 ml-2">Ship to</h3>
-                      <div className="bg-white/5 rounded-3xl p-6 border border-white/10 shadow-xl">
-                        <p className="font-black text-lg">{shippingInfo.name}</p>
-                        <p className="text-sm opacity-60 mt-2 leading-relaxed">{shippingInfo.address}</p>
-                        <p className="text-sm opacity-60 font-bold">{shippingInfo.city} - {shippingInfo.pincode}</p>
-                        <div className="h-px bg-white/5 my-4"></div>
-                        <button onClick={() => setCheckoutStep(1)} className="text-[#ff004c] text-xs font-black uppercase tracking-widest flex items-center gap-2 hover:gap-3 transition-all">
+                    {/* Mobile: Payment details second */}
+                    <div className="order-1 lg:order-2">
+                      <h3 className="text-xs lg:text-sm font-black uppercase tracking-widest opacity-40 mb-3 lg:mb-4 ml-1 lg:ml-2">Ship to</h3>
+                      <div className="bg-white/5 rounded-2xl lg:rounded-3xl p-4 lg:p-6 border border-white/10 shadow-xl">
+                        <p className="font-black text-base lg:text-lg">{shippingInfo.name}</p>
+                        <p className="text-xs lg:text-sm opacity-60 mt-1 lg:mt-2 leading-relaxed">{shippingInfo.address}</p>
+                        <p className="text-xs lg:text-sm opacity-60 font-bold">{shippingInfo.city} - {shippingInfo.pincode}</p>
+                        <div className="h-px bg-white/5 my-3 lg:my-4"></div>
+                        <button onClick={() => setCheckoutStep(1)} className="text-[#ff004c] text-[10px] lg:text-xs font-black uppercase tracking-widest flex items-center gap-2 hover:gap-3 transition-all">
                           Edit Address <ArrowRight size={12} />
                         </button>
                       </div>
 
                       {/* Coupon Section - Matching Image 2 Aesthetic */}
-                      <div className="mt-8 mb-6 overflow-hidden bg-[#8b5cf6]/5 border border-[#8b5cf6]/20 rounded-3xl relative group">
-                        <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
-                          <CheckCircle size={80} className="text-[#8b5cf6]" />
+                      <div className="mt-6 lg:mt-8 mb-4 lg:mb-6 overflow-hidden bg-[#8b5cf6]/5 border border-[#8b5cf6]/20 rounded-2xl lg:rounded-3xl relative group">
+                        <div className="absolute top-0 right-0 p-4 lg:p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+                          <CheckCircle size={40} className="text-[#8b5cf6] lg:w-20 lg:h-20" />
                         </div>
-                        <div className="p-8 flex flex-col gap-6 relative z-10">
-                          <div className="flex items-center gap-4">
-                             <div className="p-3 bg-[#8b5cf6] rounded-2xl shadow-[0_0_20px_-5px_#8b5cf6]">
-                               <QrCode size={20} className="text-white" />
+                        <div className="p-4 lg:p-8 flex flex-col gap-4 lg:gap-6 relative z-10">
+                          <div className="flex items-center gap-3 lg:gap-4">
+                             <div className="p-2 lg:p-3 bg-[#8b5cf6] rounded-xl lg:rounded-2xl shadow-[0_0_20px_-5px_#8b5cf6]">
+                               <QrCode size={16} className="text-white lg:w-5 lg:h-5" />
                              </div>
                              <div>
-                               <span className="text-lg font-black text-white block">Apply Coupon Code</span>
-                               <span className="text-[10px] font-bold text-[#8b5cf6] uppercase tracking-widest">Unlock exclusive savings</span>
+                               <span className="text-base lg:text-lg font-black text-white block">Apply Coupon Code</span>
+                               <span className="text-[8px] lg:text-[10px] font-bold text-[#8b5cf6] uppercase tracking-widest">Unlock exclusive savings</span>
                              </div>
                           </div>
                           
-                          <div className="flex gap-3 p-1.5 bg-black/40 rounded-2xl border border-white/5 backdrop-blur-md">
+                          <div className="flex gap-2 lg:gap-3 p-1.5 bg-black/40 rounded-xl lg:rounded-2xl border border-white/5 backdrop-blur-md">
                             <input 
                               type="text" 
                               placeholder="Enter coupon code" 
                               value={couponCode}
                               onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                              className="flex-1 bg-transparent px-5 py-4 text-sm font-black outline-none placeholder:text-white/10 tracking-widest"
+                              className="flex-1 bg-transparent px-3 lg:px-5 py-2 lg:py-4 text-xs lg:text-sm font-black outline-none placeholder:text-white/10 tracking-widest"
                             />
                             <button 
                               onClick={(e) => {
@@ -1213,45 +1230,45 @@ function AppContent() {
                                   alert('Invalid coupon code. Try SABBPE20');
                                 }
                               }}
-                              className="px-10 py-4 bg-[#8b5cf6] hover:bg-[#7c3aed] text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-xl hover:-translate-y-0.5"
+                              className="px-6 lg:px-10 py-2 lg:py-4 bg-[#8b5cf6] hover:bg-[#7c3aed] text-white rounded-lg lg:rounded-xl text-[10px] lg:text-xs font-black uppercase tracking-widest transition-all shadow-xl hover:-translate-y-0.5"
                             >
                               Apply
                             </button>
                           </div>
 
                           {isCouponApplied && (
-                            <div className="flex items-center gap-3 text-[10px] text-green-400 font-black uppercase tracking-widest bg-green-500/10 p-3 rounded-xl border border-green-500/20 animate-in zoom-in-95">
-                              <CheckCircle size={14} /> SABBPE20 APPLIED - 20% OFF SAVED!
+                            <div className="flex items-center gap-2 lg:gap-3 text-[8px] lg:text-[10px] text-green-400 font-black uppercase tracking-widest bg-green-500/10 p-2 lg:p-3 rounded-lg lg:rounded-xl border border-green-500/20 animate-in zoom-in-95">
+                              <CheckCircle size={12} className="lg:w-3.5 lg:h-3.5" /> SABBPE20 APPLIED - 20% OFF SAVED!
                             </div>
                           )}
                         </div>
                       </div>
 
                       {/* Price Breakdown */}
-                      <div className="mt-4 space-y-4 bg-white/[0.02] rounded-3xl p-8 border border-white/5 shadow-2xl">
-                        <div className="flex justify-between text-sm">
+                      <div className="mt-2 lg:mt-4 space-y-3 lg:space-y-4 bg-white/[0.02] rounded-2xl lg:rounded-3xl p-4 lg:p-8 border border-white/5 shadow-2xl">
+                        <div className="flex justify-between text-xs lg:text-sm">
                           <span className="opacity-40 font-bold uppercase tracking-widest">Bag Total</span>
-                          <span className="font-black text-xl">₹{cart.reduce((sum, item) => sum + item.price, 0)}</span>
+                          <span className="font-black text-base lg:text-xl">₹{cart.reduce((sum, item) => sum + item.price, 0)}</span>
                         </div>
                         {isCouponApplied && (
-                          <div className="flex justify-between text-sm text-[#8b5cf6]">
+                          <div className="flex justify-between text-xs lg:text-sm text-[#8b5cf6]">
                             <span className="font-bold uppercase tracking-widest">Coupon Discount</span>
                             <span className="font-black">-₹{Math.round(cart.reduce((sum, item) => sum + item.price, 0) * 0.2)}</span>
                           </div>
                         )}
-                        <div className="flex justify-between text-sm">
+                        <div className="flex justify-between text-xs lg:text-sm">
                           <span className="opacity-40 font-bold uppercase tracking-widest">Processing Fee</span>
-                          <span className="font-bold text-green-400 uppercase tracking-widest">Free</span>
+                          <span className="font-bold text-green-400 uppercase tracking-widest text-[10px] lg:text-xs">Free</span>
                         </div>
-                        <div className="h-px bg-white/5 my-4"></div>
-                        <div className="flex justify-between items-end pt-2">
+                        <div className="h-px bg-white/5 my-2 lg:my-4"></div>
+                        <div className="flex flex-col lg:flex-row justify-between items-end gap-3 lg:gap-0 pt-0 lg:pt-2">
                           <div>
-                            <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-30 block mb-1">Total Payable</span>
-                            <span className="text-4xl font-black text-[#8b5cf6] tracking-tighter">₹{isCouponApplied ? Math.round(cart.reduce((sum, item) => sum + item.price, 0) * 0.8) : cart.reduce((sum, item) => sum + item.price, 0)}</span>
+                            <span className="text-[8px] lg:text-[10px] font-black uppercase tracking-[0.2em] opacity-30 block mb-0.5 lg:mb-1">Total Payable</span>
+                            <span className="text-2xl lg:text-4xl font-black text-[#8b5cf6] tracking-tighter">₹{isCouponApplied ? Math.round(cart.reduce((sum, item) => sum + item.price, 0) * 0.8) : cart.reduce((sum, item) => sum + item.price, 0)}</span>
                           </div>
                           <button 
                             onClick={() => setCheckoutStep(3)}
-                            className="bg-[#ff004c] text-white px-10 py-5 rounded-2xl font-black uppercase tracking-widest hover:brightness-110 transition-all shadow-[0_10px_30px_-10px_rgba(255,0,76,0.5)] hover:-translate-y-1"
+                            className="bg-[#ff004c] text-white w-full lg:w-auto px-6 lg:px-10 py-3 lg:py-5 rounded-xl lg:rounded-2xl font-black uppercase tracking-widest hover:brightness-110 transition-all shadow-[0_10px_30px_-10px_rgba(255,0,76,0.5)] hover:-translate-y-1 text-xs lg:text-sm"
                           >
                             Review Order
                           </button>
@@ -1268,13 +1285,13 @@ function AppContent() {
                       <h3 className="text-sm font-black uppercase tracking-widest opacity-60 mb-4">Shipping Address</h3>
                       <p className="font-bold">{shippingInfo.name}</p>
                       <p className="text-sm opacity-60">{shippingInfo.address}</p>
-                      <p className="text-sm opacity-60">{shippingInfo.city} - {shippingInfo.pincode}</p>
+                      <p className="text-sm opacity-60">{shippingInfo.city}, {shippingInfo.state} - {shippingInfo.pincode}</p>
                       <p className="text-sm opacity-60">{shippingInfo.phone} | {shippingInfo.email}</p>
                     </div>
 
                     <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
                       <h3 className="text-sm font-black uppercase tracking-widest opacity-60 mb-4">Payment Method</h3>
-                      <p className="font-bold">{paymentMethod === 'card' ? 'Credit / Debit Card' : paymentMethod === 'upi' ? 'UPI' : 'Cash on Delivery'}</p>
+                      <p className="font-bold">{selectedPaymentOption === 'sabbpe_card' ? 'Credit / Debit Card' : selectedPaymentOption === 'sabbpe_upi' ? 'UPI / Apps' : selectedPaymentOption === 'sabbpe_netbanking' ? 'Net Banking' : selectedPaymentOption === 'sabbpe_wallet' ? 'Wallets' : selectedPaymentOption === 'sabbpe_cod' ? 'Cash on Delivery' : 'Not Selected'}</p>
                     </div>
 
                     <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
@@ -1321,17 +1338,29 @@ function AppContent() {
                           const newOrder = {
                             id: `ORD-${String(orders.length + 1).padStart(3, '0')}`,
                             date: new Date().toISOString().split('T')[0],
-                            status: 'Processing',
-                            items: cart.map(item => ({ name: item.name, price: item.price, image: item.images[0] })),
+                            status: selectedPaymentOption === 'sabbpe_cod' ? 'Processing' : 'Processing',
+                            items: cart.map(item => ({ name: item.name, price: item.price, image: item.images?.[0] || item.image, color: item.color, colorHex: item.colorHex, qty: 1 })),
                             total: cart.reduce((sum, item) => sum + item.price, 0),
-                            shipping: { ...shippingInfo },
-                            payment: paymentMethod
+                            shippingAddress: { name: shippingInfo.name, address: shippingInfo.address, city: shippingInfo.city, state: shippingInfo.state || 'Maharashtra', pincode: shippingInfo.pincode, phone: shippingInfo.phone },
+                            payment: selectedPaymentOption === 'sabbpe_card' ? 'Credit/Debit Card' : selectedPaymentOption === 'sabbpe_upi' ? 'UPI' : selectedPaymentOption === 'sabbpe_netbanking' ? 'Net Banking' : selectedPaymentOption === 'sabbpe_wallet' ? 'Wallets' : selectedPaymentOption === 'sabbpe_cod' ? 'Cash on Delivery' : 'Not Selected',
+                            trackingNumber: null,
+                            carrier: 'Pending',
+                            estimatedDelivery: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                            actualDelivery: null,
+                            timeline: [
+                              { status: 'Order Placed', date: new Date().toISOString().replace('T', ' ').substring(0, 16), completed: true },
+                              { status: 'Payment Confirmed', date: selectedPaymentOption === 'sabbpe_cod' ? null : new Date().toISOString().replace('T', ' ').substring(0, 16), completed: selectedPaymentOption !== 'sabbpe_cod' },
+                              { status: 'Processing', date: null, completed: false },
+                              { status: 'Shipped', date: null, completed: false },
+                              { status: 'Delivered', date: null, completed: false }
+                            ]
                           };
                           setOrders([newOrder, ...orders]);
                           setCart([]);
                           setCheckoutOpen(false);
                           setCheckoutStep(1);
-                          setShippingInfo({ name: '', address: '', city: '', pincode: '', phone: '', email: '' });
+                          setShippingInfo({ name: '', address: '', city: '', state: '', pincode: '', phone: '', email: '' });
+                          setSelectedPaymentOption('');
                           setProfileSection('orders');
                           setProfileOpen(true);
                         }}

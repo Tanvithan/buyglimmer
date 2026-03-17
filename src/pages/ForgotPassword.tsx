@@ -117,7 +117,7 @@ export default function ForgotPassword() {
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative w-full max-w-md"
+        className="relative w-full max-w-md px-4 sm:px-0"
       >
         {/* Logo */}
         <div className="text-center mb-8">
@@ -128,7 +128,7 @@ export default function ForgotPassword() {
         </div>
 
         {/* Card */}
-        <div className="bg-slate-800/50 backdrop-blur-xl rounded-3xl p-8 shadow-2xl border border-slate-700/50">
+        <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl sm:rounded-3xl p-6 sm:p-8 shadow-2xl border border-slate-700/50">
           <AnimatePresence mode="wait">
             {step === 'phone' && (
               <motion.div

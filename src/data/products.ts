@@ -65,7 +65,7 @@ export const PRODUCTS: Product[] = [
   { 
     id: 3, 
     name: 'Neon Runner Sneakers', 
-    price: 2499, 
+    price: 1999, 
     category: 'Clothing', 
     images: [
       'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800',
@@ -110,7 +110,7 @@ export const PRODUCTS: Product[] = [
   { 
     id: 5, 
     name: 'Tech Jacket v2', 
-    price: 3499, 
+    price: 1999, 
     category: 'Clothing', 
     images: [
       'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800',
@@ -202,7 +202,7 @@ export const PRODUCTS: Product[] = [
   { 
     id: 9, 
     name: 'Premium Smart Watch', 
-    price: 4999, 
+    price: 1999, 
     category: 'Accessories', 
     images: [
       'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800',
@@ -238,7 +238,7 @@ export const PRODUCTS: Product[] = [
   { 
     id: 11, 
     name: 'Wireless Earbuds Pro', 
-    price: 2499, 
+    price: 1999, 
     category: 'Accessories', 
     images: [
       'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=800',
@@ -292,7 +292,7 @@ export const PRODUCTS: Product[] = [
   { 
     id: 14, 
     name: 'Diamond Stud Earrings', 
-    price: 3499, 
+    price: 1499, 
     category: 'Jewelry', 
     images: [
       'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=800',
@@ -347,7 +347,7 @@ export const PRODUCTS: Product[] = [
   { 
     id: 17, 
     name: 'Denim Jacket Classic', 
-    price: 2299, 
+    price: 1799, 
     category: 'Clothing', 
     images: [
       'https://images.unsplash.com/photo-1576995853123-5a10305d93c0?w=800',
@@ -458,7 +458,7 @@ export const PRODUCTS: Product[] = [
   { 
     id: 23, 
     name: 'Chrono Sport Watch', 
-    price: 3999, 
+    price: 1999, 
     category: 'Accessories', 
     images: [
       'https://images.unsplash.com/photo-1524592094714-0f0654e20314?w=800',
@@ -512,7 +512,7 @@ export const PRODUCTS: Product[] = [
   { 
     id: 26, 
     name: 'Pearl Pendant Necklace', 
-    price: 2499, 
+    price: 1499, 
     category: 'Jewelry', 
     images: [
       'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=800',
@@ -566,7 +566,7 @@ export const PRODUCTS: Product[] = [
   { 
     id: 29, 
     name: 'Crossbody Bag', 
-    price: 1899, 
+    price: 1499, 
     category: 'Accessories', 
     images: [
       'https://images.unsplash.com/photo-1581605405669-fcdf81165afa?w=800',
@@ -602,7 +602,7 @@ export const PRODUCTS: Product[] = [
   { 
     id: 31, 
     name: 'Vanguard Bomber Jacket', 
-    price: 2899, 
+    price: 1799, 
     category: 'Clothing', 
     images: [
       'https://images.unsplash.com/photo-1521223890158-f9f7c3d5d504?w=800',
@@ -621,7 +621,7 @@ export const PRODUCTS: Product[] = [
   { 
     id: 34, 
     name: 'Signal Messenger Bag', 
-    price: 2199, 
+    price: 1499, 
     category: 'Accessories', 
     images: [
       'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=800',
