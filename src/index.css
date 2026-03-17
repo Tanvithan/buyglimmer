@@ -1,0 +1,29 @@
+@import "tailwindcss";
+
+@theme {
+  --font-serif: Georgia, serif;
+  --animate-shimmer: shimmer 2s linear infinite;
+
+  @keyframes shimmer {
+    100% {
+      transform: translateX(200%);
+    }
+  }
+}
+
+@layer base {
+  body {
+    @apply bg-[#050508] text-white overflow-x-hidden font-sans;
+  }
+}
+
+/* Custom Mesh Gradient */
+.bg-mesh {
+  background: radial-gradient(circle at 50% 50%, #1a1a2e 0%, #050508 100%);
+}
+
+.mesh-grid {
+  background-image: linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), 
+                    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
