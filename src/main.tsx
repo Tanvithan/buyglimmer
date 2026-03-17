@@ -936,9 +936,9 @@ function AppContent() {
                 {checkoutStep === 1 && (
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-8">
                     {/* Order Summary - First on mobile */}
-                    <div className="order-1 lg:order-2">
+                    <div className="order-1 lg:order-1">
                       <h3 className="text-sm font-black uppercase tracking-widest opacity-60 mb-4">Order Summary</h3>
-                      <div className="space-y-3 mb-4">
+                      <div className="space-y-3 mb-4 max-h-[180px] overflow-y-auto">
                         {savedAddresses.map((addr) => (
                           <div 
                             key={addr.id}
