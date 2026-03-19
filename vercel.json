@@ -1,0 +1,5 @@
+{
+  "rewrites": [
+    { "source": "/((?!images|css|js|fonts|api).*)", "destination": "/" }
+  ]
+}
