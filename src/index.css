@@ -27,3 +27,26 @@
                     linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
   background-size: 60px 60px;
 }
+
+/* Premium Glassmorphism */
+.glass-premium {
+  @apply bg-black/60 backdrop-blur-2xl border border-white/10;
+}
+
+.glass-hot-pink {
+  @apply bg-[#ff004c]/10 backdrop-blur-lg border border-[#ff004c]/20;
+}
+
+/* Hide Scrollbar but keep functionality */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Custom Safe Area for Bottom Nav */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}

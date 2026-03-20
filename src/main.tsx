@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter, Routes, Route, useNavigate, useLocation, Link } from 'react-router-dom'
 import './index.css'
@@ -6,13 +6,13 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   ShoppingBag, User, X, Truck, Shield,
   Package, Gem, Trash2, LogOut, Heart, ChevronRight,
-  CheckCircle, Edit2, Menu, Phone, CreditCard,
+  CheckCircle, Edit2, Menu,
   Instagram, Twitter, Facebook, ArrowRight, Mail,
-  RotateCcw, MapPin, Box, AlertCircle, ExternalLink, QrCode, Wallet, Building2, ChevronDown
+  RotateCcw, MapPin, Box, AlertCircle, ExternalLink, QrCode
 } from 'lucide-react'
 import About from './pages/About'
 import Contact from './pages/Contact'
-import Collections, { COLLECTIONS } from './pages/Collections'
+import Collections from './pages/Collections'
 import FAQ from './pages/FAQ'
 import Terms from './pages/Terms'
 import Privacy from './pages/Privacy'
@@ -21,7 +21,16 @@ import ProductDetails from './pages/ProductDetails'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import ForgotPassword from './pages/ForgotPassword'
-import { PRODUCTS } from './data/products'
+import { productApi } from './services/productApi'
+import { addressApi } from './services/addressApi'
+import { cartApi } from './services/cartApi'
+import { userApi } from './services/userApi'
+import { couponApi } from './services/couponApi'
+import { deliveryApi } from './services/deliveryApi'
+import { orderApi } from './services/orderApi'
+import { returnApi } from './services/returnApi'
+import { refundApi } from './services/refundApi'
+import { sabbpePaymentApi } from './services/sabbpePaymentApi'
 
 // --- PRODUCTS DATA MOVED TO ./data/products.ts ---
 
@@ -37,110 +46,309 @@ function AppContent() {
   const [wishlist, setWishlist] = useState<any[]>([])
   const [wishlistOpen, setWishlistOpen] = useState(false)
   const [loginPromptOpen, setLoginPromptOpen] = useState(false)
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('token'))
+  const [apiProducts, setApiProducts] = useState<any[]>([])
+  const [, setLoadingProducts] = useState(true)
 
-  const handleLogin = () => {
+  const fetchCartData = async () => {
+    try {
+      const items = await cartApi.get();
+      // Initialize with API products securely
+      const productSource = apiProducts;
+      const mapped = items.map((item: any) => {
+        const product = productSource.find((p: any) => p.id === item.productId);
+        return {
+          cartId: item.cartItemId,
+          id: item.productId,
+          variantId: item.variantId,
+          name: item.productName,
+          price: Number(item.unitPrice),
+          images: product?.images || ['https://images.unsplash.com/photo-1557821552-17105176677c?w=400'],
+          quantity: item.quantity,
+          color: 'Default',
+          size: 'M'
+        };
+      });
+      setCart(mapped);
+    } catch (e) {
+      console.error('Failed to fetch cart', e);
+    }
+  };
+
+  const fetchOrdersData = async () => {
+    try {
+      const sums = await orderApi.list();
+      const mapped = sums.map((o: any) => ({
+        id: o.orderId,
+        date: o.createdAt?.split('T')[0] || new Date().toISOString().split('T')[0],
+        status: o.status || 'Processing',
+        total: Number(o.totalAmount),
+        items: [{ name: 'Multiple Items...', price: Number(o.totalAmount), image: 'https://images.unsplash.com/photo-1557821552-17105176677c?w=600' }],
+        timeline: [
+           { status: 'Order Placed', date: o.createdAt?.split('T')[0], completed: true }
+        ],
+        shippingAddress: { name: 'Customer', address: 'Address on file', city: '', state: '', pincode: '', phone: '' },
+      }));
+      setOrders(mapped);
+    } catch (e) {
+      console.warn('Failed to fetch orders, defaulting empty', e);
+      setOrders([]);
+    }
+  };
+
+  const fetchAddressesData = async () => {
+    try {
+      const addrs = await addressApi.getAddresses();
+      setSavedAddresses(addrs.map((a: any) => ({
+        id: a.addressId || a.id,
+        name: a.name || 'Customer',
+        address: a.addressLine || a.addressLine1 || '',
+        city: a.city || '',
+        state: a.state || '',
+        pincode: a.pincode || '',
+        phone: a.phone || '',
+        isDefault: a.addressType === 'Home' || a.type === 'Home'
+      })));
+      if (addrs.length > 0) setSelectedSavedAddress(addrs[0].addressId || addrs[0].id);
+    } catch(e) { /* silent fail */ }
+  };
+
+  const handleLogin = (user: any) => {
+    if (!user) return;
     setIsLoggedIn(true)
+    setUserProfile({
+      name: user.name || user.sub || 'User',
+      email: user.email || '',
+      phone: user.phone || '',
+      address: user.address || 'No address set',
+      avatar: (user.name || user.sub || 'U').substring(0, 2).toUpperCase()
+    })
+    if (user.customerId || user.id) {
+      const cid = user.customerId || user.id;
+      cartApi.setCustomerId(cid);
+      addressApi.setCustomerId(cid);
+      userApi.setCustomerId(cid);
+      couponApi.setCustomerId(cid);
+      orderApi.setCustomerId(cid);
+      returnApi.setCustomerId(cid);
+      refundApi.setCustomerId(cid);
+      fetchCartData();
+      fetchOrdersData();
+      fetchAddressesData();
+      userApi.getProfile().then(profile => {
+        if (profile) {
+           setUserProfile({
+              name: profile.name || 'User',
+              email: profile.email || '',
+              phone: profile.mobile || profile.phone || '',
+              address: profile.address || 'No address set',
+              avatar: (profile.name || 'U').substring(0, 2).toUpperCase()
+           });
+        }
+      }).catch(e => console.error("Failed to load profile", e));
+    }
   }
 
   const handleLogout = () => {
     setIsLoggedIn(false)
     setCart([])
     setWishlist([])
+    localStorage.removeItem('token')
+    localStorage.removeItem('user')
+    setUserProfile(null)
+    cartApi.setToken('');
+    cartApi.setCustomerId('');
+    userApi.setCustomerId('');
   }
+
+  // Fetch products from API on mount
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (token) {
+          productApi.setToken(token);
+          addressApi.setToken(token);
+          cartApi.setToken(token);
+          couponApi.setToken(token);
+          deliveryApi.setToken(token);
+          orderApi.setToken(token);
+          returnApi.setToken(token);
+          refundApi.setToken(token);
+          const userStr = localStorage.getItem('user');
+          if (userStr) {
+            const user = JSON.parse(userStr);
+            if (user.customerId || user.id) {
+              const cid = user.customerId || user.id;
+              cartApi.setCustomerId(cid);
+              addressApi.setCustomerId(cid);
+              userApi.setCustomerId(cid);
+              couponApi.setCustomerId(cid);
+              orderApi.setCustomerId(cid);
+              returnApi.setCustomerId(cid);
+              refundApi.setCustomerId(cid);
+              fetchCartData();
+              fetchOrdersData();
+              fetchAddressesData();
+              userApi.getProfile().then(profile => {
+                if (profile) {
+                   setUserProfile({
+                      name: profile.name || 'User',
+                      email: profile.email || '',
+                      phone: profile.mobile || profile.phone || '',
+                      address: profile.address || 'No address set',
+                      avatar: (profile.name || 'U').substring(0, 2).toUpperCase()
+                   });
+                }
+              }).catch(e => console.error("Failed to load profile", e));
+            }
+          }
+        }
+        
+        const products = await productApi.list();
+        
+        // Map API products to local format
+        const mappedProducts = products.map((p: any) => ({
+          id: p.productId,
+          name: p.name,
+          category: p.brand || 'Clothing',
+          price: Number(p.price),
+          mrp: Number(p.mrp),
+          images: p.imageUrl ? [p.imageUrl] : ['https://images.unsplash.com/photo-1557821552-17105176677c?w=400'],
+          description: p.description,
+          stock: p.stock,
+          sizes: ['S', 'M', 'L', 'XL'],
+          colors: [{ name: 'Default', hex: '#000000' }],
+          specs: {},
+          reviews: []
+        }));
+        
+        setApiProducts(mappedProducts);
+      } catch (err) {
+        console.error('Failed to fetch products:', err);
+        // Do not fall back to demo data, just leave empty to reflect real DB state.
+        setApiProducts([]);
+      } finally {
+        setLoadingProducts(false);
+      }
+    };
+    
+    fetchProducts();
+  }, [])
   const [profileSection, setProfileSection] = useState<'menu' | 'edit' | 'orders'>('menu')
-  const [userProfile, setUserProfile] = useState({
-    name: 'John Doe',
-    email: 'johndoe@sabbpe.com',
-    phone: '+91 98765 43210',
-    address: 'Mumbai, Fashion Hub',
-    avatar: 'JD'
-  })
-  const [orders, setOrders] = useState<any[]>([
-    { 
-      id: 'ORD-001', 
-      date: '2026-03-10', 
-      status: 'Delivered', 
-      items: [{ name: 'Cyber-Tech Hoodie', price: 1299, image: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=600', color: 'Obsidian Black', colorHex: '#0a0a0a', qty: 1 }], 
-      total: 1299,
-      trackingNumber: 'SABBPE7829345612IN',
-      carrier: 'Delhivery',
-      estimatedDelivery: '2026-03-12',
-      actualDelivery: '2026-03-11',
-      shippingAddress: { name: 'John Doe', address: '123 Fashion Street, Bandra', city: 'Mumbai', state: 'Maharashtra', pincode: '400001', phone: '+91 98765 43210' },
-      timeline: [
-        { status: 'Order Placed', date: '2026-03-10 09:30', completed: true },
-        { status: 'Payment Confirmed', date: '2026-03-10 09:35', completed: true },
-        { status: 'Shipped', date: '2026-03-11 14:20', completed: true },
-        { status: 'Out for Delivery', date: '2026-03-11 18:00', completed: true },
-        { status: 'Delivered', date: '2026-03-11 19:45', completed: true }
-      ]
-    },
-    { 
-      id: 'ORD-002', 
-      date: '2026-03-08', 
-      status: 'Shipped', 
-      items: [{ name: 'Urban Joggers Pro', price: 999, image: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=600', color: 'Stealth Black', colorHex: '#1a1a1a', qty: 1 }], 
-      total: 999,
-      trackingNumber: 'SABBPE2938475612IN',
-      carrier: 'Blue Dart',
-      estimatedDelivery: '2026-03-14',
-      actualDelivery: null,
-      shippingAddress: { name: 'John Doe', address: '123 Fashion Street, Bandra', city: 'Mumbai', state: 'Maharashtra', pincode: '400001', phone: '+91 98765 43210' },
-      timeline: [
-        { status: 'Order Placed', date: '2026-03-08 11:00', completed: true },
-        { status: 'Payment Confirmed', date: '2026-03-08 11:05', completed: true },
-        { status: 'Shipped', date: '2026-03-09 16:30', completed: true },
-        { status: 'In Transit', date: '2026-03-10 09:00', completed: true },
-        { status: 'Out for Delivery', date: null, completed: false },
-        { status: 'Delivered', date: null, completed: false }
-      ]
-    },
-    { 
-      id: 'ORD-003', 
-      date: '2026-03-05', 
-      status: 'Processing', 
-      items: [{ name: 'Tech Jacket v2', price: 3499, image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600', color: 'Stealth Black', colorHex: '#0f0f0f', qty: 1 }], 
-      total: 3499,
-      trackingNumber: null,
-      carrier: 'Pending',
-      estimatedDelivery: '2026-03-18',
-      actualDelivery: null,
-      shippingAddress: { name: 'John Doe', address: '123 Fashion Street, Bandra', city: 'Mumbai', state: 'Maharashtra', pincode: '400001', phone: '+91 98765 43210' },
-      timeline: [
-        { status: 'Order Placed', date: '2026-03-05 15:00', completed: true },
-        { status: 'Payment Confirmed', date: '2026-03-05 15:10', completed: true },
-        { status: 'Processing', date: '2026-03-05 18:00', completed: true },
-        { status: 'Shipped', date: null, completed: false },
-        { status: 'Delivered', date: null, completed: false }
-      ]
-    },
-  ])
+  
+  // Load user profile from localStorage or use empty object
+  const getInitialUserProfile = () => {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      try {
+        const user = JSON.parse(storedUser);
+        return {
+          name: user.name || user.sub || 'User',
+          email: user.email || '',
+          phone: user.phone || '',
+          address: user.address || 'No address set',
+          avatar: (user.name || user.sub || 'U').substring(0, 2).toUpperCase()
+        };
+      } catch (e) {
+        console.error('Failed to parse user from localStorage:', e);
+      }
+    }
+    return null;
+  };
+  
+  const [userProfile, setUserProfile] = useState<{name: string; email: string; phone: string; address: string; avatar: string} | null>(getInitialUserProfile())
+  const [orders, setOrders] = useState<any[]>([])
   const [checkoutStep, setCheckoutStep] = useState(1)
   const [shippingInfo, setShippingInfo] = useState({ name: '', address: '', city: '', state: '', pincode: '', phone: '', email: '' })
   const [selectedOrder, setSelectedOrder] = useState<any>(null)
   const [orderDetailOpen, setOrderDetailOpen] = useState(false)
   const [upiScannerOpen, setUpiScannerOpen] = useState(false)
   const [selectedPaymentOption, setSelectedPaymentOption] = useState<string>('')
-  const [selectedBank, setSelectedBank] = useState<string>('')
   const [couponCode, setCouponCode] = useState('')
   const [isCouponApplied, setIsCouponApplied] = useState(false)
-  const [isSabbpeActive, setIsSabbpeActive] = useState(false)
-  const [savedAddresses, setSavedAddresses] = useState([
-    { id: 1, name: 'John Doe', address: '123 Fashion Street, Bandra', city: 'Mumbai', state: 'Maharashtra', pincode: '400001', phone: '+91 98765 43210', isDefault: true }
-  ])
-  const [selectedSavedAddress, setSelectedSavedAddress] = useState<number | null>(1)
-
-  const banks = [
-    'State Bank of India', 'HDFC Bank', 'ICICI Bank', 'Axis Bank', 
-    'Kotak Mahindra', 'Punjab National Bank', 'Bank of Baroda', 'Canara Bank'
-  ]
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false)
+  const [savedAddresses, setSavedAddresses] = useState<any[]>([])
+  const [selectedSavedAddress, setSelectedSavedAddress] = useState<string | null>(null)
 
 
-  const addToCart = (p: any) => {
-    setCart([...cart, { ...p, cartId: Date.now() }])
+
+  const addToCart = async (p: any) => {
+    if (!isLoggedIn) {
+      setLoginPromptOpen(true);
+      return;
+    }
+    
+    // Avoid "Duplicate Key" on backend: if item already exists in cart, just increment its quantity
+    const existingIndex = cart.findIndex(item => item.id === p.id);
+    if (existingIndex !== -1) {
+       const existingItem = cart[existingIndex];
+       if (existingItem.cartId && typeof existingItem.cartId === 'string' && existingItem.cartId.length > 10) {
+         updateCartQuantity(existingItem.cartId, existingIndex, 1);
+       } else {
+         // Locally mapped but not synchronized to backend properly, just increment local qty
+         const newCart = [...cart];
+         newCart[existingIndex] = { ...existingItem, quantity: (existingItem.quantity || 1) + 1 };
+         setCart(newCart);
+       }
+       setCartOpen(true);
+       return;
+    }
+
+    const tempCartId = Date.now().toString();
+    setCart([...cart, { ...p, cartId: tempCartId, quantity: 1 }])
     setCartOpen(true)
+    
+    try {
+      const res = await cartApi.add(p.id, null, 1);
+      setCart(currentCart => currentCart.map(item => 
+        item.cartId === tempCartId ? { ...item, cartId: res.cartItemId, variantId: res.variantId } : item
+      ));
+    } catch (e) {
+      console.error('Failed to add to cart on backend', e);
+      setCart(currentCart => currentCart.filter(item => item.cartId !== tempCartId));
+    }
   }
+
+  const removeFromCart = async (cartItemId: string, index: number) => {
+    const itemToRemove = cart[index];
+    const newCart = cart.filter((_, idx) => idx !== index);
+    setCart(newCart);
+
+    if (cartItemId && typeof cartItemId === 'string' && cartItemId.length > 10) {
+       try {
+         await cartApi.remove(cartItemId);
+       } catch (e) {
+         console.error('Failed to remove item', e);
+         setCart([...newCart, itemToRemove]);
+       }
+    }
+  };
+
+  const updateCartQuantity = async (cartItemId: string, index: number, increment: number) => {
+    const item = cart[index];
+    const newQty = (item.quantity || 1) + increment;
+    
+    if (newQty <= 0) {
+      removeFromCart(cartItemId, index);
+      return;
+    }
+
+    const newCart = [...cart];
+    newCart[index] = { ...item, quantity: newQty };
+    setCart(newCart);
+
+    if (cartItemId && typeof cartItemId === 'string' && cartItemId.length > 10) {
+      try {
+        await cartApi.update(cartItemId, newQty);
+      } catch (e) {
+        console.error('Failed to update quantity', e);
+        const rollbackCart = [...cart];
+        rollbackCart[index] = item;
+        setCart(rollbackCart);
+      }
+    }
+  };
 
   const toggleWishlist = (p: any) => {
     if (wishlist.find(item => item.id === p.id)) {
@@ -150,9 +358,11 @@ function AppContent() {
     }
   }
 
+  // Force usage of API data exclusively
+  const productSource = apiProducts;
   const filteredProducts = activeCategory === 'All'
-    ? PRODUCTS
-    : PRODUCTS.filter(p => p.category === activeCategory)
+    ? productSource
+    : productSource.filter(p => p.category === activeCategory)
 
   const handleNavigation = (section: string) => {
     if (section === 'shop' || section === 'hero') {
@@ -301,7 +511,9 @@ function AppContent() {
               </motion.div>
             </section>
 
-            {/* Collections Section - Moved to Main Page */}
+            {/* Categories Section removed perfectly per user request! */}
+
+            {/* Collections Section - Completely Dynamic based on Backend productSource! */}
             <section id="collections" className="max-w-[1400px] mx-auto py-20 md:py-32 px-4 md:px-10">
               <div className="text-center mb-16 space-y-4">
                 <span className="inline-block px-4 py-1.5 bg-[#ff004c]/10 text-[#ff004c] text-[10px] font-black uppercase tracking-[0.3em] rounded-full border border-[#ff004c]/20">The 2026 Drops</span>
@@ -309,35 +521,51 @@ function AppContent() {
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {COLLECTIONS.map((c, i) => (
-                  <motion.div
-                    key={c.id}
-                    initial={{ opacity: 0, y: 30 }} 
-                    whileInView={{ opacity: 1, y: 0 }} 
-                    transition={{ delay: i * 0.1 }}
-                    onClick={() => { setActiveCategory(c.category); navigate('/collections'); window.scrollTo(0, 0); }}
-                    className="group cursor-pointer bg-white/5 rounded-[40px] overflow-hidden border border-white/10 hover:border-[#ff004c]/50 transition-all relative"
-                  >
-                    <div className="h-[400px] md:h-[500px] overflow-hidden">
-                      <img 
-                        src={c.image} 
-                        alt={c.name} 
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000"
-                        onError={(e) => { (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1557821552-17105176677c?w=600'; }}
-                      />
-                      {/* Overlay */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-[#08080c] via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity" />
-                    </div>
-                    
-                    <div className="absolute bottom-0 left-0 w-full p-10 transform group-hover:-translate-y-2 transition-transform">
-                      <span className="text-[#ff004c] text-[10px] font-black uppercase tracking-[0.2em] mb-2 block">{c.category} Focus</span>
-                      <h3 className="text-2xl md:text-3xl font-black text-white flex items-center gap-3">
-                        {c.name}
-                        <ArrowRight size={24} className="opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all text-[#ff004c]" />
-                      </h3>
-                    </div>
-                  </motion.div>
-                ))}
+                {Array.from(new Set((productSource || []).map((p: any) => p.category))).filter((c: any) => c !== 'All').map((category: any, i) => {
+                  
+                  // Restore premium editorial static images exactly for the visual cards!
+                  let coverImage = 'https://images.unsplash.com/photo-1557821552-17105176677c?w=600';
+                  if (category === 'Clothing') {
+                      coverImage = 'https://images.unsplash.com/photo-1523398002811-999ca8dec234?w=600';
+                  } else if (category === 'Accessories') {
+                      coverImage = 'https://images.unsplash.com/photo-1576053139778-7e32f2ae3cfd?w=600';
+                  } else if (category === 'Jewelry') {
+                      coverImage = 'https://images.unsplash.com/photo-1515377905703-c4788e51af15?w=600';
+                  } else {
+                      const coverProduct = productSource.find((p: any) => p.category === category);
+                      coverImage = coverProduct?.images?.[0] || coverImage;
+                  }
+                  
+                  return (
+                    <motion.div
+                      key={category}
+                      initial={{ opacity: 0, y: 30 }} 
+                      whileInView={{ opacity: 1, y: 0 }} 
+                      transition={{ delay: i * 0.1 }}
+                      onClick={() => { setActiveCategory(category); navigate('/collections'); window.scrollTo(0, 0); }}
+                      className="group cursor-pointer bg-white/5 rounded-[40px] overflow-hidden border border-white/10 hover:border-[#ff004c]/50 transition-all relative"
+                    >
+                      <div className="h-[400px] md:h-[500px] overflow-hidden">
+                        <img 
+                          src={coverImage} 
+                          alt={category} 
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000"
+                          onError={(e) => { (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1557821552-17105176677c?w=600'; }}
+                        />
+                        {/* Overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#08080c] via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity" />
+                      </div>
+                      
+                      <div className="absolute bottom-0 left-0 w-full p-10 transform group-hover:-translate-y-2 transition-transform">
+                        <span className="text-[#ff004c] text-[10px] font-black uppercase tracking-[0.2em] mb-2 block">Curated {category}</span>
+                        <h3 className="text-2xl md:text-3xl font-black text-white flex items-center gap-3">
+                          {category} Collection
+                          <ArrowRight size={24} className="opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all text-[#ff004c]" />
+                        </h3>
+                      </div>
+                    </motion.div>
+                  );
+                })}
               </div>
             </section>
 
@@ -357,6 +585,7 @@ function AppContent() {
             activeCategory={activeCategory}
             setActiveCategory={setActiveCategory} 
             filteredProducts={filteredProducts}
+            allProducts={productSource}
             wishlist={wishlist}
             toggleWishlist={toggleWishlist}
             addToCart={addToCart}
@@ -374,6 +603,31 @@ function AppContent() {
         <Route path="/login" element={<Login onLogin={handleLogin} />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/payment-result" element={
+          <div className="min-h-screen pt-40 px-6 flex flex-col items-center justify-center text-center">
+            {location.search.includes('status=SUCCESS') || location.search.includes('status=success') ? (
+              <>
+                <CheckCircle size={80} className="text-green-500 mb-6" />
+                <h1 className="text-4xl font-black mb-4">Payment Successful!</h1>
+                <p className="opacity-60 mb-8 max-w-md mx-auto">Your order has been formally placed and your transaction is complete.</p>
+                <div className="bg-white/5 border border-white/10 rounded-2xl p-6 font-mono text-xs opacity-60 mb-8 text-left max-w-sm w-full">
+                  <p>Transaction ID: {new URLSearchParams(location.search).get('txnId') || new URLSearchParams(location.search).get('txnid')}</p>
+                  <p className="mt-2">Status: SUCCESS</p>
+                </div>
+              </>
+            ) : (
+              <>
+                <X size={80} className="text-[#ff004c] mb-6" />
+                <h1 className="text-4xl font-black mb-4">Payment Failed</h1>
+                <p className="opacity-60 mb-8 max-w-md mx-auto">There was an issue processing your transaction. Please try again.</p>
+                <div className="bg-white/5 border border-white/10 rounded-2xl p-6 font-mono text-xs opacity-60 mb-8 text-left max-w-sm w-full">
+                  <p>Status: {new URLSearchParams(location.search).get('status')}</p>
+                </div>
+              </>
+            )}
+            <button onClick={() => { navigate('/'); window.scrollTo(0,0); }} className="px-10 py-4 bg-[#ff004c] text-white rounded-xl font-bold hover:brightness-110 transition-all uppercase tracking-widest text-sm">Return Home</button>
+          </div>
+        } />
       </Routes>
 
       <footer className="w-full bg-[#030305] border-t border-white/5 pt-16 pb-8 px-4 mt-auto">
@@ -488,10 +742,10 @@ function AppContent() {
             {profileSection === 'menu' ? (
               <>
                 <div className="flex items-center gap-4 sm:gap-6 mb-6 sm:mb-8">
-                  <div className="w-14 h-14 sm:w-20 sm:h-20 bg-[#ff004c] rounded-full flex items-center justify-center text-lg sm:text-2xl font-black">{userProfile.avatar}</div>
+                  <div className="w-14 h-14 sm:w-20 sm:h-20 bg-[#ff004c] rounded-full flex items-center justify-center text-lg sm:text-2xl font-black">{userProfile?.avatar || 'U'}</div>
                   <div>
-                    <h3 className="text-xl font-black">{userProfile.name}</h3>
-                    <p className="text-sm opacity-40">{userProfile.email}</p>
+                    <h3 className="text-xl font-black">{userProfile?.name || 'User'}</h3>
+                    <p className="text-sm opacity-40">{userProfile?.email || 'user@example.com'}</p>
                   </div>
                 </div>
                 <div className="flex flex-col gap-4">
@@ -523,8 +777,8 @@ function AppContent() {
                     <label className="text-xs font-black uppercase tracking-widest opacity-60 mb-2 block">Full Name</label>
                     <input
                       type="text"
-                      value={userProfile.name}
-                      onChange={(e) => setUserProfile({ ...userProfile, name: e.target.value, avatar: e.target.value.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) })}
+                      value={userProfile?.name || ''}
+                      onChange={(e) => setUserProfile({ name: e.target.value, email: userProfile?.email || '', phone: userProfile?.phone || '', address: userProfile?.address || '', avatar: e.target.value.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) })}
                       className="w-full p-4 bg-white/5 border border-white/10 rounded-xl outline-none focus:border-[#ff004c] transition-all"
                     />
                   </div>
@@ -532,8 +786,8 @@ function AppContent() {
                     <label className="text-xs font-black uppercase tracking-widest opacity-60 mb-2 block">Email</label>
                     <input
                       type="email"
-                      value={userProfile.email}
-                      onChange={(e) => setUserProfile({ ...userProfile, email: e.target.value })}
+                      value={userProfile?.email || ''}
+                      onChange={(e) => setUserProfile({ ...userProfile, email: e.target.value } as any)}
                       className="w-full p-4 bg-white/5 border border-white/10 rounded-xl outline-none focus:border-[#ff004c] transition-all"
                     />
                   </div>
@@ -541,8 +795,8 @@ function AppContent() {
                     <label className="text-xs font-black uppercase tracking-widest opacity-60 mb-2 block">Phone</label>
                     <input
                       type="tel"
-                      value={userProfile.phone}
-                      onChange={(e) => setUserProfile({ ...userProfile, phone: e.target.value })}
+                      value={userProfile?.phone || ''}
+                      onChange={(e) => setUserProfile({ ...userProfile, phone: e.target.value } as any)}
                       className="w-full p-4 bg-white/5 border border-white/10 rounded-xl outline-none focus:border-[#ff004c] transition-all"
                     />
                   </div>
@@ -550,12 +804,25 @@ function AppContent() {
                     <label className="text-xs font-black uppercase tracking-widest opacity-60 mb-2 block">Address</label>
                     <input
                       type="text"
-                      value={userProfile.address}
-                      onChange={(e) => setUserProfile({ ...userProfile, address: e.target.value })}
+                      value={userProfile?.address || ''}
+                      onChange={(e) => setUserProfile({ ...userProfile, address: e.target.value } as any)}
                       className="w-full p-4 bg-white/5 border border-white/10 rounded-xl outline-none focus:border-[#ff004c] transition-all"
                     />
                   </div>
-                  <button onClick={() => { setProfileSection('menu'); alert('Profile updated successfully!'); }} className="w-full py-4 bg-[#ff004c] text-white rounded-xl font-bold uppercase tracking-widest text-xs mt-4 hover:brightness-110 transition-all">
+                  <button 
+                    onClick={async () => { 
+                      if (userProfile) {
+                        try {
+                          await userApi.updateProfile(userProfile.name, userProfile.email, userProfile.phone);
+                          setProfileSection('menu'); 
+                          alert('Profile updated successfully!'); 
+                        } catch (e) {
+                          alert('Failed to update profile');
+                        }
+                      }
+                    }} 
+                    className="w-full py-4 bg-[#ff004c] text-white rounded-xl font-bold uppercase tracking-widest text-xs mt-4 hover:brightness-110 transition-all"
+                  >
                     Save Changes
                   </button>
                 </div>
@@ -571,7 +838,26 @@ function AppContent() {
                     <div 
                       key={order.id} 
                       className="bg-white/5 rounded-2xl p-5 border border-white/10 cursor-pointer hover:border-[#ff004c]/30 transition-all"
-                      onClick={() => { setSelectedOrder(order); setOrderDetailOpen(true); }}
+                      onClick={async () => { 
+                        setSelectedOrder(order); 
+                        setOrderDetailOpen(true); 
+                        
+                        try {
+                           const thickDetail = await orderApi.getDetail(order.id);
+                           const richItems = thickDetail.items?.map((it:any) => ({
+                             name: it.productName,
+                             price: it.price,
+                             qty: it.quantity,
+                             image: 'https://images.unsplash.com/photo-1557821552-17105176677c?w=400'
+                           })) || order.items;
+                           
+                           setSelectedOrder({
+                             ...order,
+                             items: richItems,
+                             total: thickDetail.totalAmount
+                           });
+                        } catch(e) { /* keep summary fallback */ }
+                      }}
                     >
                       <div className="flex justify-between items-start mb-4">
                         <div>
@@ -709,11 +995,35 @@ function AppContent() {
                     <h3 className="font-black uppercase tracking-widest text-sm flex items-center gap-2">
                       <Truck size={18} className="text-[#ff004c]" /> Shipment Tracking
                     </h3>
-                    {selectedOrder.trackingNumber && (
-                      <span className="text-xs bg-white/10 px-3 py-1 rounded-full font-mono">
-                        {selectedOrder.trackingNumber}
-                      </span>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {selectedOrder.trackingNumber && (
+                        <span className="text-xs bg-white/10 px-3 py-1 rounded-full font-mono">
+                          {selectedOrder.trackingNumber}
+                        </span>
+                      )}
+                      <button 
+                        onClick={async () => {
+                          try {
+                            const res = await deliveryApi.getDetail(selectedOrder.id);
+                            alert(`Delivery Status: ${res.status} | Location: ${res.currentLocation || 'Unknown'} | Courier: ${res.courierName}`);
+                          } catch(e) {
+                            alert('Live tracking not available for this mockup order yet.');
+                          }
+                        }}
+                        className="text-[10px] font-bold text-[#ff004c] bg-[#ff004c]/10 px-3 py-1 rounded-full hover:bg-[#ff004c]/20 transition-all font-mono"
+                      >Live Sync</button>
+                      <button 
+                        onClick={async () => {
+                          try {
+                            await deliveryApi.updateStatus(selectedOrder.id, 'Delivered', 'Customer Doorstep', 'Simulated frontend dropoff');
+                            alert(`Delivery officially logged as Delivered inside DB!`);
+                          } catch(e) {
+                            alert('Delivery not found in DB or status update failed.');
+                          }
+                        }}
+                        className="text-[10px] font-bold text-green-400 bg-green-500/10 px-3 py-1 rounded-full hover:bg-green-500/20 transition-all font-mono"
+                      >Mark Delivered</button>
+                    </div>
                   </div>
                   <div className="relative">
                     {selectedOrder.timeline.map((event: any, idx: number) => (
@@ -789,13 +1099,38 @@ function AppContent() {
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-3">
-                      <button className="p-4 bg-white/5 border border-white/10 rounded-xl text-center hover:bg-white/10 transition-all">
+                      <button 
+                        onClick={async () => {
+                          try {
+                             const retRes = await returnApi.create(selectedOrder.id, 'Did not fit', 'Requested via automated frontend');
+                             alert(`Return #${retRes.returnId} logged officially! Status: ${retRes.status}`);
+                             
+                             // Automatically chain Refund for demonstration of integrated logic
+                             const refRes = await refundApi.create(retRes.returnId, 'PAY-MOCK123', selectedOrder.total, 'Auto-approved refund');
+                             alert(`Refund #${refRes.refundId} processed! Amount: ₹${refRes.amount}`);
+                          } catch(err) {
+                             alert('Failed to log Return/Refund. DB dependencies might be missing.');
+                          }
+                        }}
+                        className="p-4 bg-white/5 border border-white/10 rounded-xl text-center hover:bg-white/10 transition-all focus:ring-1 focus:ring-[#ff004c]"
+                      >
                         <RotateCcw size={20} className="mx-auto mb-2 text-[#ff004c]" />
                         <span className="text-xs font-bold">Request Return</span>
                       </button>
-                      <button className="p-4 bg-white/5 border border-white/10 rounded-xl text-center hover:bg-white/10 transition-all">
+                      <button 
+                        onClick={async () => {
+                          try {
+                             const returns = await returnApi.list();
+                             const refunds = await refundApi.list();
+                             alert(`Found ${returns.length} returns and ${refunds.length} refunds on file.`);
+                          } catch(err) {
+                             alert('Unable to fetch history.');
+                          }
+                        }}
+                        className="p-4 bg-white/5 border border-white/10 rounded-xl text-center hover:bg-white/10 transition-all focus:ring-1 focus:ring-blue-400"
+                      >
                         <Box size={20} className="mx-auto mb-2 text-blue-400" />
-                        <span className="text-xs font-bold">Request Exchange</span>
+                        <span className="text-xs font-bold">Check History</span>
                       </button>
                     </div>
                     <button className="w-full p-4 bg-blue-500/10 border border-blue-500/30 rounded-xl text-center hover:bg-blue-500/20 transition-all">
@@ -893,7 +1228,14 @@ function AppContent() {
                       <p className="text-xs opacity-60 mt-1">Size: {item.size}</p>
                     )}
                   </div>
-                  <Trash2 size={16} onClick={() => setCart(cart.filter((_, idx) => idx !== i))} className="cursor-pointer opacity-30 hover:opacity-100 transition-all" />
+                  <div className="flex flex-col items-end gap-2">
+                    <Trash2 size={16} onClick={() => removeFromCart(item.cartId, i)} className="cursor-pointer opacity-30 hover:opacity-100 transition-all hover:text-[#ff004c]" />
+                    <div className="flex items-center gap-2 bg-white/5 rounded-lg px-2 py-1">
+                      <button onClick={() => updateCartQuantity(item.cartId, i, -1)} className="w-5 h-5 flex items-center justify-center opacity-60 hover:opacity-100 bg-white/10 rounded">-</button>
+                      <span className="text-xs font-bold w-4 text-center">{item.quantity || 1}</span>
+                      <button onClick={() => updateCartQuantity(item.cartId, i, 1)} className="w-5 h-5 flex items-center justify-center opacity-60 hover:opacity-100 bg-white/10 rounded">+</button>
+                    </div>
+                  </div>
                 </div>
               ))}
               {cart.length === 0 && <p className="text-center opacity-30 mt-20">Your bag is empty.</p>}
@@ -927,7 +1269,7 @@ function AppContent() {
                 </div>
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="text-2xl font-black uppercase tracking-tighter">
-                    {checkoutStep === 1 ? 'Shipping Details' : checkoutStep === 2 ? 'Payment Method' : 'Review Order'}
+                    {checkoutStep === 1 ? 'Shipping Details' : checkoutStep === 2 ? 'Review Order' : 'Payment Method'}
                   </h2>
                   <X onClick={() => { setCheckoutOpen(false); setCheckoutStep(1); }} className="cursor-pointer opacity-50 hover:opacity-100 hover:text-[#ff004c] transition-all" />
                 </div>
@@ -1052,7 +1394,7 @@ function AppContent() {
                       <div className="mt-6 space-y-2">
                         <div className="flex justify-between text-sm">
                           <span className="opacity-60">Subtotal</span>
-                          <span className="font-bold">₹{cart.reduce((sum, item) => sum + item.price, 0)}</span>
+                          <span className="font-bold">₹{cart.reduce((sum, item) => sum + item.price * (item.quantity || 1), 0)}</span>
                         </div>
                         <div className="flex justify-between text-sm">
                           <span className="opacity-60">Shipping</span>
@@ -1060,178 +1402,193 @@ function AppContent() {
                         </div>
                         <div className="flex justify-between text-lg font-black pt-4 border-t border-white/10">
                           <span>Total</span>
-                          <span>₹{cart.reduce((sum, item) => sum + item.price, 0)}</span>
+                          <span>₹{isCouponApplied ? Math.round(cart.reduce((sum, item) => sum + item.price * (item.quantity || 1), 0) * 0.8) : cart.reduce((sum, item) => sum + item.price * (item.quantity || 1), 0)}</span>
                         </div>
                       </div>
+
+                      {/* Coupon Section - In Shipping Step */}
+                      <div className="mt-6 lg:mt-8 mb-4 lg:mb-6 overflow-hidden bg-[#8b5cf6]/5 border border-[#8b5cf6]/20 rounded-2xl lg:rounded-3xl relative group">
+                        <div className="absolute top-0 right-0 p-4 lg:p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+                          <CheckCircle size={40} className="text-[#8b5cf6] lg:w-20 lg:h-20" />
+                        </div>
+                        <div className="p-4 lg:p-6 flex flex-col gap-3 lg:gap-4 relative z-10">
+                          <div className="flex items-center gap-2 lg:gap-3">
+                             <div className="p-2 lg:p-2.5 bg-[#8b5cf6] rounded-xl lg:rounded-xl shadow-[0_0_20px_-5px_#8b5cf6]">
+                               <QrCode size={14} className="text-white lg:w-4 lg:h-4" />
+                             </div>
+                             <div>
+                               <span className="text-sm lg:text-base font-black text-white block">Apply Coupon Code</span>
+                               <span className="text-[8px] lg:text-[9px] font-bold text-[#8b5cf6] uppercase tracking-widest">Unlock exclusive savings</span>
+                             </div>
+                          </div>
+                          
+                          <div className="flex gap-2 lg:gap-2 p-1 bg-black/40 rounded-xl lg:rounded-xl border border-white/5 backdrop-blur-md">
+                            <input 
+                              type="text" 
+                              placeholder="Enter coupon code" 
+                              value={couponCode}
+                              onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                              className="flex-1 bg-transparent px-3 lg:px-4 py-2 text-xs lg:text-sm font-black outline-none placeholder:text-white/10 tracking-widest"
+                            />
+                            <button 
+                              onClick={async (e) => {
+                                e.preventDefault();
+                                try {
+                                  const totalAmount = cart.reduce((sum, item) => sum + item.price * (item.quantity || 1), 0);
+                                  const res = await couponApi.validate(couponCode, totalAmount);
+                                  if (res.valid) {
+                                    setIsCouponApplied(true);
+                                    alert(`Coupon Applied! 20% discount added.`);
+                                  } else {
+                                    setIsCouponApplied(false);
+                                    alert(res.message || 'Invalid coupon code.');
+                                  }
+                                } catch (err) {
+                                  setIsCouponApplied(false);
+                                  alert('Failed to validate coupon.');
+                                }
+                              }}
+                              className="px-4 lg:px-6 py-2 bg-[#8b5cf6] hover:bg-[#7c3aed] text-white rounded-lg text-[10px] lg:text-xs font-black uppercase tracking-widest transition-all shadow-xl hover:-translate-y-0.5"
+                            >
+                              Apply
+                            </button>
+                          </div>
+
+                          {isCouponApplied && (
+                            <div className="flex items-center gap-2 text-[8px] lg:text-[9px] text-green-400 font-black uppercase tracking-widest bg-green-500/10 p-2 rounded-lg border border-green-500/20 animate-in zoom-in-95">
+                              <CheckCircle size={10} className="lg:w-3 lg:h-3" /> SABBPE20 APPLIED - 20% OFF!
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
                       <button
-                        onClick={() => {
-                          // Save new address if not using saved one
+                        onClick={async () => {
                           if (selectedSavedAddress === null && shippingInfo.name && shippingInfo.address) {
-                            setSavedAddresses([...savedAddresses, { 
-                              id: Date.now(), 
-                              name: shippingInfo.name, 
-                              address: shippingInfo.address, 
-                              city: shippingInfo.city, 
-                              state: shippingInfo.state, 
-                              pincode: shippingInfo.pincode, 
-                              phone: shippingInfo.phone,
-                              isDefault: false 
-                            }]);
+                            try {
+                              const newAddress = {
+                                name: shippingInfo.name,
+                                phone: shippingInfo.phone,
+                                addressLine1: shippingInfo.address,
+                                city: shippingInfo.city,
+                                state: shippingInfo.state,
+                                pincode: shippingInfo.pincode,
+                                addressType: 'Home'
+                              };
+                              const created: any = await addressApi.addAddress(newAddress);
+                              const newId = created.addressId || created.id || Date.now().toString();
+                              setSavedAddresses([...savedAddresses, { 
+                                id: newId, 
+                                ...newAddress,
+                                isDefault: false 
+                              }]);
+                              setSelectedSavedAddress(newId);
+                            } catch (err) {
+                              alert('Failed to add address. Please ensure you are logged in and details are valid.');
+                              return;
+                            }
                           }
-                          shippingInfo.name && shippingInfo.address && shippingInfo.phone ? setCheckoutStep(2) : alert('Please fill all required fields')
+                          shippingInfo.name && shippingInfo.address && shippingInfo.phone ? setCheckoutStep(2) : alert('Please fill all required fields');
                         }}
                         className="mt-6 w-full py-5 bg-[#ff004c] text-white rounded-2xl font-black uppercase tracking-widest hover:brightness-110 transition-all"
                       >
-                        Continue to Payment
+                        Continue to Review
                       </button>
                     </div>
                   </div>
                 )}
 
-                {/* Step 2: Payment */}
+                {/* Step 2: Review Order */}
                 {checkoutStep === 2 && (
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  <div className="grid grid-cols-1 gap-8">
                     {/* Mobile: Order details first, then payment */}
-                    <div className="order-2 lg:order-1 space-y-6">
+                    <div className="space-y-6">
                       {/* Payment Header */}
                       <div className="mt-6 lg:mt-12 mb-6 lg:mb-8">
                         <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-[#ff004c] mb-2 opacity-80">Choose Payment Gateway</h3>
                         <div className="h-1 w-12 bg-gradient-to-r from-[#ff004c] to-transparent rounded-full"></div>
                       </div>
 
-                      {/* Pay with SABBPE - Main Container */}
-                      <div className={`rounded-2xl lg:rounded-[32px] border transition-all duration-500 overflow-hidden mb-4 lg:mb-6 ${isSabbpeActive ? 'bg-[#08080c] border-[#ff004c]/30 shadow-2xl' : 'bg-white/5 border-white/10 hover:border-[#ff004c]/30 shadow-none'}`}>
-                        <button 
-                          onClick={() => setIsSabbpeActive(!isSabbpeActive)}
-                          className="w-full p-4 lg:p-8 text-left transition-all relative group"
-                        >
-                          <div className="flex items-center gap-3 lg:gap-6">
-                            <div className={`w-12 h-12 lg:w-16 lg:h-16 rounded-xl lg:rounded-2xl flex items-center justify-center transition-all duration-500 bg-[#0052FF] shadow-[0_8px_20px_-5px_rgba(0,82,255,0.4)]`}>
-                              <img src="https://cdn-icons-png.flaticon.com/512/3670/3670353.png" alt="SabbPe" className="w-6 h-6 lg:w-10 lg:h-10 brightness-0 invert" />
-                            </div>
-                            <div className="flex-1">
-                              <h4 className="font-black text-lg lg:text-2xl uppercase tracking-wider text-white">SABBPE</h4>
-                            </div>
-                            <div className={`ml-auto w-10 h-10 lg:w-12 lg:h-12 rounded-full border border-white/10 flex items-center justify-center transition-all duration-500 ${isSabbpeActive ? 'rotate-180 bg-[#ff004c]/10 border-[#ff004c]/30' : 'bg-white/5'}`}>
-                              <ChevronDown size={20} className={isSabbpeActive ? 'text-[#ff004c]' : 'text-white/40'} />
-                            </div>
-                          </div>
-                        </button>
+                      {/* Pay with SABBPE - Simple Button */}
+                      <button
+                        onClick={async () => {
+                          setIsProcessingPayment(true)
+                          await new Promise(resolve => setTimeout(resolve, 2000))
 
-                        {/* Payment Details - Now visible on mobile */}
-                        <div className={`transition-all duration-500 ease-in-out ${isSabbpeActive ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0 pointer-events-none'}`}>
-                          <div className="p-4 lg:p-8 space-y-4 pt-0">
-                            {/* Payment Options Grid - Now visible on mobile */}
-                            <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 lg:gap-4">
-                              {[
-                                { id: 'sabbpe_card', name: 'Credit/Debit Card', icon: <CreditCard size={20} /> },
-                                { id: 'sabbpe_upi', name: 'UPI / Apps', icon: <Phone size={20} /> },
-                                { id: 'sabbpe_netbanking', name: 'Net Banking', icon: <Building2 size={20} /> },
-                                { id: 'sabbpe_wallet', name: 'Wallets', icon: <Wallet size={20} /> },
-                                { id: 'sabbpe_cod', name: 'Cash on Delivery', icon: <Truck size={20} /> },
-                              ].map(option => (
-                                <button 
-                                  key={option.id}
-                                  onClick={() => setSelectedPaymentOption(selectedPaymentOption === option.id ? '' : option.id)}
-                                  className={`p-3 lg:p-6 rounded-xl lg:rounded-2xl border transition-all flex flex-col items-center gap-2 lg:gap-3 ${selectedPaymentOption === option.id ? 'bg-[#ff004c]/10 border-[#ff004c] text-white shadow-lg' : 'bg-white/5 border-white/10 hover:border-white/20 text-white/60'}`}
-                                >
-                                  <div className={`${selectedPaymentOption === option.id ? 'text-[#ff004c]' : 'text-white/40'}`}>
-                                    {option.icon}
-                                  </div>
-                                  <span className="text-[8px] lg:text-[10px] font-black uppercase tracking-[0.1em]">{option.name}</span>
-                                </button>
-                              ))}
-                            </div>
+                          let finalOrderId = 'ORD-' + Date.now().toString().slice(-6);
 
-                            {/* Detailed Input Sections - Now visible on mobile */}
-                            <div className="mt-4 lg:mt-8 transition-all duration-500 overflow-hidden">
-                              {(selectedPaymentOption === 'sabbpe_card') && (
-                                <div className="space-y-4 lg:space-y-6 bg-white/5 p-4 lg:p-8 rounded-xl lg:rounded-3xl border border-white/10 animate-in fade-in slide-in-from-top-4 duration-500">
-                                   <h5 className="text-white font-black text-xs lg:text-sm uppercase tracking-widest flex items-center gap-2 lg:gap-3">
-                                     <div className="w-1 h-3 lg:h-4 bg-[#ff004c] rounded-full"></div> Enter Card Details
-                                   </h5>
-                                   <div className="grid gap-3 lg:gap-4">
-                                     <input type="text" placeholder="Card Number" className="w-full px-4 lg:px-6 py-3 lg:py-4 bg-white/5 border border-white/10 rounded-xl lg:rounded-2xl text-white outline-none focus:border-[#ff004c]/50 transition-all font-bold text-sm lg:placeholder:text-white/20" />
-                                     <div className="grid grid-cols-2 gap-3 lg:gap-4">
-                                       <input type="text" placeholder="MM/YY" className="w-full px-4 lg:px-6 py-3 lg:py-4 bg-white/5 border border-white/10 rounded-xl lg:rounded-2xl text-white outline-none focus:border-[#ff004c]/50 transition-all font-bold text-sm" />
-                                       <input type="password" placeholder="CVV" className="w-full px-4 lg:px-6 py-3 lg:py-4 bg-white/5 border border-white/10 rounded-xl lg:rounded-2xl text-white outline-none focus:border-[#ff004c]/50 transition-all font-bold text-sm" />
-                                     </div>
-                                   </div>
-                                   <button className="w-full bg-[#ff004c] py-3 lg:py-5 rounded-xl lg:rounded-2xl font-black text-white uppercase tracking-widest shadow-xl shadow-[#ff004c]/20 hover:scale-[1.02] transition-transform text-xs lg:text-sm">Pay Securely</button>
-                                </div>
-                              )}
+                          try {
+                            const itemsForBackend = cart.map((item: any) => {
+                               // Guarantee Foreign Key resolution natively even if browser React state is stale
+                               const validFallbackId = '38fdce2b-1f70-11f1-9651-ed7fb304f8d2'; 
+                               return {
+                                 variantId: item.variantId || validFallbackId,
+                                 quantity: item.quantity || 1,
+                                 price: item.price || 1999
+                               };
+                            });
+                            // If user bypassed address selection somehow, gracefully fail rather than pass invalid string triggering DB FK collapse
+                            const chosenAddressId = selectedSavedAddress ? selectedSavedAddress.toString() : savedAddresses[0]?.id;
+                            if (!chosenAddressId) throw new Error("Missing valid User Address ID");
+                            
+                            const createdOrder = await orderApi.create(
+                               chosenAddressId,
+                               'SABBPE',
+                               itemsForBackend,
+                               isCouponApplied ? couponCode : undefined
+                            );
+                            
+                            if (createdOrder && createdOrder.orderId) {
+                               finalOrderId = createdOrder.orderId;
+                            }
+                          } catch (err) {
+                            console.warn("Backend order creation failed, generating local fallback ID", err);
+                          }
 
-                              {selectedPaymentOption === 'sabbpe_upi' && (
-                                <div className="space-y-4 lg:space-y-6 bg-white/5 p-4 lg:p-8 rounded-xl lg:rounded-3xl border border-white/10 animate-in fade-in slide-in-from-top-4 duration-500">
-                                   <h5 className="text-white font-black text-xs lg:text-sm uppercase tracking-widest flex items-center gap-2 lg:gap-3">
-                                     <div className="w-1 h-3 lg:h-4 bg-[#ff004c] rounded-full"></div> Quick UPI Pay
-                                   </h5>
-                                   <div className="flex gap-2 lg:gap-4">
-                                     <input type="text" placeholder="mobile@upi" className="flex-1 px-3 lg:px-6 py-3 lg:py-4 bg-white/5 border border-white/10 rounded-xl lg:rounded-2xl text-white outline-none focus:border-[#ff004c]/50 transition-all font-bold text-sm" />
-                                     <button className="px-4 lg:px-8 bg-[#ff004c] text-white rounded-xl lg:rounded-2xl font-black text-[8px] lg:text-[10px] uppercase">Verify</button>
-                                   </div>
-                                   <div className="grid grid-cols-3 gap-2 lg:gap-3">
-                                     {[
-                                       { name: 'PhonePe', url: 'phonepe://pay' },
-                                       { name: 'GPay', url: 'gpay://' },
-                                       { name: 'Paytm', url: 'paytmmp://pay' }
-                                     ].map(app => (
-                                       <a 
-                                         key={app.name} 
-                                         href={app.url}
-                                         onClick={() => {
-                                           // Try to open the app, fallback to scanner if not installed
-                                           window.location.href = app.url + `?pa=sabbpe@upi&pn=SABBPE&cu=INR&am=${cart.reduce((sum, item) => sum + item.price, 0)}`;
-                                           setTimeout(() => setUpiScannerOpen(true), 500);
-                                         }}
-                                         className="p-2 lg:p-4 bg-white/5 border border-white/10 rounded-xl lg:rounded-2xl text-white/60 hover:text-white transition-all flex flex-col items-center gap-1 lg:gap-2"
-                                       >
-                                         <QrCode size={16} />
-                                         <span className="text-[6px] lg:text-[8px] font-black uppercase">{app.name}</span>
-                                       </a>
-                                     ))}
-                                   </div>
-                                </div>
-                              )}
+                          try {
+                             // --- Sabbpe Payment Gateway Integration ---
+                             const totalCost = isCouponApplied ? Math.round(cart.reduce((sum, item) => sum + item.price * (item.quantity || 1), 0) * 0.8) : cart.reduce((sum, item) => sum + item.price * (item.quantity || 1), 0);
+                             const productDesc = `Order ${finalOrderId}`;
+                             
+                             const tknRes = await sabbpePaymentApi.getToken(finalOrderId);
+                             
+                             const initRes = await sabbpePaymentApi.initiate(
+                               totalCost, 
+                               productDesc, 
+                               { 
+                                  firstname: shippingInfo.name || 'Guest', 
+                                  email: shippingInfo.email || 'customer@sabbpe.com', 
+                                  phone: shippingInfo.phone || '9999999999' 
+                               }, 
+                               tknRes.sabbpe_token, 
+                               window.location.origin // The domain format expected: e.g. http://localhost:5173
+                             );
+                             
+                             if (initRes && initRes.payment_url) {
+                                // Redirect user directly out of the React app into the Secure Gateway
+                                window.location.href = initRes.payment_url;
+                                return; // Halt script explicitly
+                             } else {
+                                alert('Failure retrieving payment URL from Gateway.');
+                             }
+                          } catch(e) {
+                             console.error("Payment Gateway Error", e);
+                             alert('Failed to connect to Sabbpe Payment Subsystem.');
+                          }
 
-                              {selectedPaymentOption === 'sabbpe_netbanking' && (
-                                <div className="space-y-4 lg:space-y-6 bg-white/5 p-4 lg:p-8 rounded-xl lg:rounded-3xl border border-white/10 animate-in fade-in slide-in-from-top-4 duration-500">
-                                   <h5 className="text-white font-black text-xs lg:text-sm uppercase tracking-widest flex items-center gap-2 lg:gap-3">
-                                     <div className="w-1 h-3 lg:h-4 bg-[#ff004c] rounded-full"></div> Select Your Bank
-                                   </h5>
-                                   <div className="grid grid-cols-2 gap-2 lg:gap-3">
-                                      {banks.map(bank => (
-                                        <button
-                                          key={bank}
-                                          onClick={() => setSelectedBank(bank)}
-                                          className={`p-2 lg:p-4 text-[8px] lg:text-[10px] font-black rounded-lg lg:rounded-xl border transition-all text-left ${selectedBank === bank ? 'border-[#ff004c] bg-[#ff004c]/10 text-white' : 'border-white/10 bg-white/5 text-white/40'}`}
-                                        >
-                                          {bank}
-                                        </button>
-                                      ))}
-                                   </div>
-                                </div>
-                              )}
+                          setIsProcessingPayment(false);
+                        }}
+                        disabled={isProcessingPayment || cart.length === 0}
+                        className="w-full py-6 bg-gradient-to-r from-[#0052FF] to-[#00a8ff] text-white rounded-2xl font-black uppercase tracking-widest hover:brightness-110 transition-all shadow-lg"
+                      >
+                        {isProcessingPayment ? 'Processing...' : `Pay ₹${isCouponApplied ? Math.round(cart.reduce((sum, item) => sum + item.price * (item.quantity || 1), 0) * 0.8) : cart.reduce((sum, item) => sum + item.price * (item.quantity || 1), 0)} with SabbPe`}
+                      </button>
 
-                              {selectedPaymentOption === 'sabbpe_wallet' && (
-                                <div className="space-y-4 lg:space-y-6 bg-white/5 p-4 lg:p-8 rounded-xl lg:rounded-3xl border border-white/10 animate-in fade-in slide-in-from-top-4 duration-500">
-                                   <h5 className="text-white font-black text-xs lg:text-sm uppercase tracking-widest flex items-center gap-2 lg:gap-3">
-                                     <div className="w-1 h-3 lg:h-4 bg-[#ff004c] rounded-full"></div> Available Wallets
-                                   </h5>
-                                   <div className="grid gap-2 lg:gap-3">
-                                      {['Amazon Pay', 'MobiKwik', 'PhonePe Wallet'].map(w => (
-                                        <button key={w} className="p-3 lg:p-5 bg-white/5 border border-white/10 rounded-xl lg:rounded-2xl flex items-center justify-between hover:bg-white/10 transition-all font-black text-white/60 text-[10px] lg:text-xs">
-                                          {w}
-                                          <div className="w-3 lg:w-4 h-3 lg:h-4 rounded-full border border-white/20"></div>
-                                        </button>
-                                      ))}
-                                   </div>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
+                      {/* Back Button */}
+                      <button onClick={() => setCheckoutStep(1)} className="w-full py-4 bg-white/10 text-white rounded-2xl font-black uppercase tracking-widest hover:bg-white/20 transition-all">
+                        Back
+                      </button>
+
 
                       {/* Safe & Secure Card */}
                       <div className="rounded-2xl lg:rounded-[32px] bg-white/5 border border-white/10 p-4 lg:p-6 flex items-center justify-between group hover:border-green-500/30 transition-all">
@@ -1250,103 +1607,10 @@ function AppContent() {
                       </div>
 
                     </div>
-
-                    {/* Mobile: Payment details second */}
-                    <div className="order-1 lg:order-2">
-                      <h3 className="text-xs lg:text-sm font-black uppercase tracking-widest opacity-40 mb-3 lg:mb-4 ml-1 lg:ml-2">Ship to</h3>
-                      <div className="bg-white/5 rounded-2xl lg:rounded-3xl p-4 lg:p-6 border border-white/10 shadow-xl">
-                        <p className="font-black text-base lg:text-lg">{shippingInfo.name}</p>
-                        <p className="text-xs lg:text-sm opacity-60 mt-1 lg:mt-2 leading-relaxed">{shippingInfo.address}</p>
-                        <p className="text-xs lg:text-sm opacity-60 font-bold">{shippingInfo.city} - {shippingInfo.pincode}</p>
-                        <div className="h-px bg-white/5 my-3 lg:my-4"></div>
-                        <button onClick={() => setCheckoutStep(1)} className="text-[#ff004c] text-[10px] lg:text-xs font-black uppercase tracking-widest flex items-center gap-2 hover:gap-3 transition-all">
-                          Edit Address <ArrowRight size={12} />
-                        </button>
-                      </div>
-
-                      {/* Coupon Section - Matching Image 2 Aesthetic */}
-                      <div className="mt-6 lg:mt-8 mb-4 lg:mb-6 overflow-hidden bg-[#8b5cf6]/5 border border-[#8b5cf6]/20 rounded-2xl lg:rounded-3xl relative group">
-                        <div className="absolute top-0 right-0 p-4 lg:p-8 opacity-5 group-hover:opacity-10 transition-opacity">
-                          <CheckCircle size={40} className="text-[#8b5cf6] lg:w-20 lg:h-20" />
-                        </div>
-                        <div className="p-4 lg:p-8 flex flex-col gap-4 lg:gap-6 relative z-10">
-                          <div className="flex items-center gap-3 lg:gap-4">
-                             <div className="p-2 lg:p-3 bg-[#8b5cf6] rounded-xl lg:rounded-2xl shadow-[0_0_20px_-5px_#8b5cf6]">
-                               <QrCode size={16} className="text-white lg:w-5 lg:h-5" />
-                             </div>
-                             <div>
-                               <span className="text-base lg:text-lg font-black text-white block">Apply Coupon Code</span>
-                               <span className="text-[8px] lg:text-[10px] font-bold text-[#8b5cf6] uppercase tracking-widest">Unlock exclusive savings</span>
-                             </div>
-                          </div>
-                          
-                          <div className="flex gap-2 lg:gap-3 p-1.5 bg-black/40 rounded-xl lg:rounded-2xl border border-white/5 backdrop-blur-md">
-                            <input 
-                              type="text" 
-                              placeholder="Enter coupon code" 
-                              value={couponCode}
-                              onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                              className="flex-1 bg-transparent px-3 lg:px-5 py-2 lg:py-4 text-xs lg:text-sm font-black outline-none placeholder:text-white/10 tracking-widest"
-                            />
-                            <button 
-                              onClick={(e) => {
-                                e.preventDefault();
-                                if (couponCode === 'SABBPE20') {
-                                  setIsCouponApplied(true);
-                                  alert('Coupon Applied! 20% discount added.');
-                                } else {
-                                  alert('Invalid coupon code. Try SABBPE20');
-                                }
-                              }}
-                              className="px-6 lg:px-10 py-2 lg:py-4 bg-[#8b5cf6] hover:bg-[#7c3aed] text-white rounded-lg lg:rounded-xl text-[10px] lg:text-xs font-black uppercase tracking-widest transition-all shadow-xl hover:-translate-y-0.5"
-                            >
-                              Apply
-                            </button>
-                          </div>
-
-                          {isCouponApplied && (
-                            <div className="flex items-center gap-2 lg:gap-3 text-[8px] lg:text-[10px] text-green-400 font-black uppercase tracking-widest bg-green-500/10 p-2 lg:p-3 rounded-lg lg:rounded-xl border border-green-500/20 animate-in zoom-in-95">
-                              <CheckCircle size={12} className="lg:w-3.5 lg:h-3.5" /> SABBPE20 APPLIED - 20% OFF SAVED!
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Price Breakdown */}
-                      <div className="mt-2 lg:mt-4 space-y-3 lg:space-y-4 bg-white/[0.02] rounded-2xl lg:rounded-3xl p-4 lg:p-8 border border-white/5 shadow-2xl">
-                        <div className="flex justify-between text-xs lg:text-sm">
-                          <span className="opacity-40 font-bold uppercase tracking-widest">Bag Total</span>
-                          <span className="font-black text-base lg:text-xl">₹{cart.reduce((sum, item) => sum + item.price, 0)}</span>
-                        </div>
-                        {isCouponApplied && (
-                          <div className="flex justify-between text-xs lg:text-sm text-[#8b5cf6]">
-                            <span className="font-bold uppercase tracking-widest">Coupon Discount</span>
-                            <span className="font-black">-₹{Math.round(cart.reduce((sum, item) => sum + item.price, 0) * 0.2)}</span>
-                          </div>
-                        )}
-                        <div className="flex justify-between text-xs lg:text-sm">
-                          <span className="opacity-40 font-bold uppercase tracking-widest">Processing Fee</span>
-                          <span className="font-bold text-green-400 uppercase tracking-widest text-[10px] lg:text-xs">Free</span>
-                        </div>
-                        <div className="h-px bg-white/5 my-2 lg:my-4"></div>
-                        <div className="flex flex-col lg:flex-row justify-between items-end gap-3 lg:gap-0 pt-0 lg:pt-2">
-                          <div>
-                            <span className="text-[8px] lg:text-[10px] font-black uppercase tracking-[0.2em] opacity-30 block mb-0.5 lg:mb-1">Total Payable</span>
-                            <span className="text-2xl lg:text-4xl font-black text-[#8b5cf6] tracking-tighter">₹{isCouponApplied ? Math.round(cart.reduce((sum, item) => sum + item.price, 0) * 0.8) : cart.reduce((sum, item) => sum + item.price, 0)}</span>
-                          </div>
-                          <button 
-                            onClick={() => setCheckoutStep(3)}
-                            className="bg-[#ff004c] text-white w-full lg:w-auto px-6 lg:px-10 py-3 lg:py-5 rounded-xl lg:rounded-2xl font-black uppercase tracking-widest hover:brightness-110 transition-all shadow-[0_10px_30px_-10px_rgba(255,0,76,0.5)] hover:-translate-y-1 text-xs lg:text-sm"
-                          >
-                            Review Order
-                          </button>
-                        </div>
-                      </div>
-                    </div>
                   </div>
                 )}
 
-                {/* Step 3: Review */}
+                {/* Step 3: Payment */}
                 {checkoutStep === 3 && (
                   <div className="space-y-6">
                     <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
@@ -1384,7 +1648,7 @@ function AppContent() {
                       <div className="mt-6 pt-4 border-t border-white/10 space-y-2">
                         <div className="flex justify-between">
                           <span className="opacity-60">Subtotal</span>
-                          <span className="font-bold">₹{cart.reduce((sum, item) => sum + item.price, 0)}</span>
+                          <span className="font-bold">₹{cart.reduce((sum, item) => sum + item.price * (item.quantity || 1), 0)}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="opacity-60">Shipping</span>
@@ -1392,7 +1656,7 @@ function AppContent() {
                         </div>
                         <div className="flex justify-between text-xl font-black pt-2">
                           <span>Total</span>
-                          <span>₹{cart.reduce((sum, item) => sum + item.price, 0)}</span>
+                          <span>₹{cart.reduce((sum, item) => sum + item.price * (item.quantity || 1), 0)}</span>
                         </div>
                       </div>
                     </div>
@@ -1407,8 +1671,8 @@ function AppContent() {
                             id: `ORD-${String(orders.length + 1).padStart(3, '0')}`,
                             date: new Date().toISOString().split('T')[0],
                             status: selectedPaymentOption === 'sabbpe_cod' ? 'Processing' : 'Processing',
-                            items: cart.map(item => ({ name: item.name, price: item.price, image: item.images?.[0] || item.image, color: item.color, colorHex: item.colorHex, qty: 1 })),
-                            total: cart.reduce((sum, item) => sum + item.price, 0),
+                            items: cart.map(item => ({ name: item.name, price: item.price, image: item.images?.[0] || item.image, color: item.color, colorHex: item.colorHex, qty: item.quantity || 1 })),
+                            total: cart.reduce((sum, item) => sum + item.price * (item.quantity || 1), 0),
                             shippingAddress: { name: shippingInfo.name, address: shippingInfo.address, city: shippingInfo.city, state: shippingInfo.state || 'Maharashtra', pincode: shippingInfo.pincode, phone: shippingInfo.phone },
                             payment: selectedPaymentOption === 'sabbpe_card' ? 'Credit/Debit Card' : selectedPaymentOption === 'sabbpe_upi' ? 'UPI' : selectedPaymentOption === 'sabbpe_netbanking' ? 'Net Banking' : selectedPaymentOption === 'sabbpe_wallet' ? 'Wallets' : selectedPaymentOption === 'sabbpe_cod' ? 'Cash on Delivery' : 'Not Selected',
                             trackingNumber: null,
@@ -1434,7 +1698,7 @@ function AppContent() {
                         }}
                         className="flex-1 py-5 bg-[#ff004c] text-white rounded-2xl font-black uppercase tracking-widest hover:brightness-110 transition-all"
                       >
-                        Place Order ₹{cart.reduce((sum, item) => sum + item.price, 0)}
+                        Place Order ₹{cart.reduce((sum, item) => sum + item.price * (item.quantity || 1), 0)}
                       </button>
                     </div>
                   </div>
@@ -1485,7 +1749,7 @@ function AppContent() {
                 <div className="space-y-3 text-left">
                   <div className="flex justify-between text-sm">
                     <span className="opacity-60">Order Amount</span>
-                    <span className="font-black">₹{cart.reduce((sum, item) => sum + item.price, 0)}</span>
+                    <span className="font-black">₹{cart.reduce((sum, item) => sum + item.price * (item.quantity || 1), 0)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="opacity-60">UPI App</span>

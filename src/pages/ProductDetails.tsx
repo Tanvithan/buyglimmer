@@ -2,7 +2,8 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useEffect } from 'react'
 import { ShoppingBag, ChevronLeft, ChevronRight, Star, Shield, Truck, Package, Heart, ZoomIn, X } from 'lucide-react'
-import { PRODUCTS, Product } from '../data/products'
+import type { Product } from '../data/products'
+import { productApi } from '../services/productApi'
 
 interface ProductDetailsProps {
   addToCart: (p: Product) => void;
@@ -24,22 +25,56 @@ export default function ProductDetails({ addToCart, setCheckoutOpen, wishlist, t
   const [isZoomed, setIsZoomed] = useState(false)
   const [zoomPosition, setZoomPosition] = useState({ x: 50, y: 50 })
   const [lightboxOpen, setLightboxOpen] = useState(false)
+  const [loading, setLoading] = useState(true)
 
   const viewLabels = ['Front', 'Side', 'Back', 'Detail', 'Detail']
 
   useEffect(() => {
-    const foundProduct = PRODUCTS.find(p => p.id === Number(id))
-    if (foundProduct) {
-      setProduct(foundProduct)
-      if (foundProduct.sizes && foundProduct.sizes.length > 0) {
-        setSelectedSize(foundProduct.sizes[0])
+    if (!id) return;
+    
+    // Enforce real data, disable fallback
+
+    const fetchDetail = async () => {
+      setLoading(true);
+      try {
+        const data = await productApi.getById(id);
+        if (data) {
+          setProduct({
+            id: data.productId || data.id,
+            name: data.name,
+            category: data.brand || 'Apparel',
+            price: Number(data.price),
+            images: (() => {
+              if (!data.imageUrl && !data.images) return ['https://images.unsplash.com/photo-1557821552-17105176677c?w=800'];
+              try {
+                const imgStr = data.images || data.imageUrl;
+                return Array.isArray(imgStr) ? imgStr : JSON.parse(imgStr);
+              } catch(e) {
+                return [data.imageUrl || data.images];
+              }
+            })(),
+            description: data.description,
+            sizes: ['S', 'M', 'L', 'XL'],
+            colors: [{ name: 'Default', hex: '#000000' }],
+            specs: { SKU: data.sku, Stock: data.stock },
+            reviews: []
+          });
+          setSelectedSize('M');
+          setSelectedColor('Default');
+        } else {
+          setProduct(null);
+        }
+      } catch (err) {
+         setProduct(null);
+      } finally {
+         setLoading(false);
       }
-      if (foundProduct.colors && foundProduct.colors.length > 0) {
-        setSelectedColor(foundProduct.colors[0].name)
-      }
-    }
+    };
+    
+    fetchDetail();
   }, [id])
 
+  if (loading) return <div className="pt-40 text-center font-black animate-pulse">LOADING DYNAMIC PRODUCT...</div>
   if (!product) return <div className="pt-40 text-center font-black">PRODUCT NOT FOUND</div>
 
   return (
@@ -79,6 +114,7 @@ export default function ProductDetails({ addToCart, setCheckoutOpen, wishlist, t
                 src={product.images[activeImage]} 
                 alt={product.name} 
                 className={`w-full h-full object-cover transition-all duration-500 ${isZoomed ? 'cursor-zoom-in' : ''}`}
+                loading="lazy"
                 style={isZoomed ? {
                   transform: 'scale(2)',
                   transformOrigin: `${zoomPosition.x}% ${zoomPosition.y}%`
@@ -132,7 +168,7 @@ export default function ProductDetails({ addToCart, setCheckoutOpen, wishlist, t
           </motion.div>
           
           {/* Thumbnail Gallery with Labels */}
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-3 gap-2 sm:g-4">
             {product.images.map((img, i) => (
               <motion.div 
                 key={i} 
@@ -147,6 +183,7 @@ export default function ProductDetails({ addToCart, setCheckoutOpen, wishlist, t
                   src={img} 
                   alt="" 
                   className="w-full h-full object-cover"
+                  loading="lazy"
                   onError={(e) => { (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1557821552-17105176677c?w=800'; }}
                 />
                 <div className="absolute bottom-2 left-1/2 -translate-x-1/2 px-2 py-1 bg-black/60 rounded-full">

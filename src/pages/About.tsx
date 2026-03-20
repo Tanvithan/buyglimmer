@@ -15,7 +15,8 @@ export default function About() {
         <img 
           src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800" 
           alt="Studio" 
-          className="w-full h-auto"
+          className="w-full h-auto aspect-video object-cover"
+          loading="lazy"
           onError={(e) => { (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1557821552-17105176677c?w=800'; }}
         />
       </div>
