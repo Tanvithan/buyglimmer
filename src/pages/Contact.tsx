@@ -111,17 +111,17 @@ export default function Contact() {
                   </motion.div>
 
                   <h2 className="text-3xl font-black tracking-tighter mb-2 bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent drop-shadow-lg">Get In Touch</h2>
-                  <p className="text-[#94a3b8] text-sm mb-12 leading-relaxed drop-shadow-md">Direct access to SABBPE concierge. State your inquiry.</p>
+                  <p className="text-[#94a3b8] text-sm mb-12 leading-relaxed drop-shadow-md">Direct access to Indumenti concierge. State your inquiry.</p>
 
                   <div className="space-y-4">
                     <motion.div whileHover={{ scale: 1.05, x: 10, backgroundColor: 'rgba(255,0,76,0.1)' }} className="flex items-center gap-4 text-sm opacity-90 cursor-pointer bg-black/40 backdrop-blur-md p-4 rounded-2xl border border-white/5 transition-all shadow-xl">
                       <div className="bg-gradient-to-br from-[#ff004c] to-[#ff004c]/50 p-2.5 rounded-xl text-white shadow-[0_0_15px_rgba(255,0,76,0.3)]"><Mail size={18} /></div>
-                      <span className="font-bold tracking-wide">contact@sabbpe.com</span>
+                      <span className="font-bold tracking-wide">indumentitrading373@gmail.com</span>
                     </motion.div>
 
                     <motion.div whileHover={{ scale: 1.05, x: 10, backgroundColor: 'rgba(255,0,76,0.1)' }} className="flex items-center gap-4 text-sm opacity-90 cursor-pointer bg-black/40 backdrop-blur-md p-4 rounded-2xl border border-white/5 transition-all shadow-xl">
                       <div className="bg-gradient-to-br from-[#ff004c] to-[#ff004c]/50 p-2.5 rounded-xl text-white shadow-[0_0_15px_rgba(255,0,76,0.3)]"><Phone size={18} /></div>
-                      <span className="font-bold tracking-wide">+91 98765 43210</span>
+                      <span className="font-bold tracking-wide">+91 76050 06518</span>
                     </motion.div>
 
                     <motion.div whileHover={{ scale: 1.05, x: 10, backgroundColor: 'rgba(255,0,76,0.1)' }} className="flex items-center gap-4 text-sm opacity-90 cursor-pointer bg-black/40 backdrop-blur-md p-4 rounded-2xl border border-white/5 transition-all shadow-xl">

@@ -50,6 +50,39 @@ export const orderApi = {
     return response.data;
   },
 
+  async instantBuy(addressId: string, variantId: string, quantity: number, price: number, paymentMethod: string, couponCode?: string) {
+    if (!currentCustomerId) throw new Error('Customer ID not set');
+
+    const request: ApiRequest<any> = {
+      requestId: generateRequestId(),
+      token: token || undefined,
+      data: {
+        customerId: currentCustomerId,
+        addressId,
+        variantId,
+        quantity,
+        price,
+        couponCode: couponCode || null,
+        paymentMethod
+      }
+    };
+
+    const res = await fetch(`${API_BASE}/orders/instant-buy`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(request),
+    });
+
+    if (!res.ok) {
+      throw new Error('Failed to create instant buy order');
+    }
+
+    const response = await res.json();
+    return response.data;
+  },
+
   async list() {
     if (!currentCustomerId) throw new Error('Customer ID not set');
 

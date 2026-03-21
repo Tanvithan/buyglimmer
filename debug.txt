@@ -1,0 +1,1 @@
+Exception: org.springframework.dao.TransientDataAccessResourceException - PreparedStatementCallback; SQL [CALL sp_create_order(?, ?, ?, ?)]; (conn=11023) Data truncated for column 'status' at row 1

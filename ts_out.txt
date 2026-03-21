@@ -1,0 +1,12 @@
+src/main.tsx(9,29): error TS6133: 'Phone' is declared but its value is never read.
+src/main.tsx(9,36): error TS6133: 'CreditCard' is declared but its value is never read.
+src/main.tsx(11,62): error TS6133: 'Wallet' is declared but its value is never read.
+src/main.tsx(11,70): error TS6133: 'Building2' is declared but its value is never read.
+src/main.tsx(11,81): error TS6133: 'ChevronDown' is declared but its value is never read.
+src/main.tsx(44,10): error TS6133: 'loadingProducts' is declared but its value is never read.
+src/main.tsx(196,10): error TS6133: 'selectedBank' is declared but its value is never read.
+src/main.tsx(196,24): error TS6133: 'setSelectedBank' is declared but its value is never read.
+src/main.tsx(200,10): error TS6133: 'isSabbpeActive' is declared but its value is never read.
+src/main.tsx(200,26): error TS6133: 'setIsSabbpeActive' is declared but its value is never read.
+src/main.tsx(204,9): error TS6133: 'banks' is declared but its value is never read.
+src/pages/ForgotPassword.tsx(5,24): error TS6133: 'ArrowLeft' is declared but its value is never read.
