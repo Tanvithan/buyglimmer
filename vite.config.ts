@@ -1,25 +1,18 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import path from "path";
 
 export default defineConfig({
   plugins: [react()],
-  base: '/',
-  build: {
-    assetsDir: 'assets',
-    sourcemap: false,
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "src"),
+      "@components": path.resolve(__dirname, "src/components"),
+      "@assets": path.resolve(__dirname, "src/attached_assets"),
+      "@lib": path.resolve(__dirname, "src/lib"),
+    },
   },
   server: {
-    host: true,
-    port: 5173,
-    proxy: {
-      '/auth': {
-        target: 'http://localhost:8081',
-        changeOrigin: true,
-      },
-      '/api': {
-        target: 'http://localhost:8080',
-        changeOrigin: true,
-      }
-    }
-  }
-})
+    open: true,
+  },
+});

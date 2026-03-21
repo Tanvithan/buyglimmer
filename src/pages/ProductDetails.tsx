@@ -12,9 +12,10 @@ interface ProductDetailsProps {
   toggleWishlist: (p: Product) => void;
   isLoggedIn: boolean;
   setLoginPromptOpen: (open: boolean) => void;
+  buyInstinctively: (p: any) => void;
 }
 
-export default function ProductDetails({ addToCart, setCheckoutOpen, wishlist, toggleWishlist, isLoggedIn, setLoginPromptOpen }: ProductDetailsProps) {
+export default function ProductDetails({ addToCart, setCheckoutOpen, wishlist, toggleWishlist, isLoggedIn, setLoginPromptOpen, buyInstinctively }: ProductDetailsProps) {
   const { id } = useParams()
   const navigate = useNavigate()
   const [product, setProduct] = useState<Product | null>(null)
@@ -261,7 +262,7 @@ export default function ProductDetails({ addToCart, setCheckoutOpen, wishlist, t
                 <ShoppingBag size={18} className="group-hover:animate-bounce" /> Add To Bag
               </button>
               <button 
-                onClick={() => { if (isLoggedIn) { addToCart(product); setCheckoutOpen(true); } else { setLoginPromptOpen(true); } }}
+                onClick={() => { if (isLoggedIn) { buyInstinctively(product); } else { setLoginPromptOpen(true); } }}
                 className="flex-1 py-5 bg-[#ff004c] text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:brightness-110 transition-all shadow-[0_10px_30px_-5px_rgba(255,0,76,0.3)]"
               >
                 Buy Instinctively
