@@ -695,7 +695,6 @@ function AppContent() {
         <Route path="/product/:id" element={
           <ProductDetails
             addToCart={addToCart}
-            setCheckoutOpen={setCheckoutOpen}
             wishlist={wishlist}
             toggleWishlist={toggleWishlist}
             isLoggedIn={isLoggedIn}

@@ -1,8 +1,8 @@
-
+const AUTH_API_URL = (import.meta.env.VITE_AUTH_API_URL || '');
 
 export const authApi = {
   async login(email: string, password: string) {
-    const res = await fetch(`/auth/login`, {
+    const res = await fetch(`${AUTH_API_URL}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ identifier: email, password: password })
@@ -23,7 +23,7 @@ export const authApi = {
   },
 
   async register(name: string, email: string, phone: string, password: string) {
-    const res = await fetch(`/auth/register`, {
+    const res = await fetch(`${AUTH_API_URL}/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -49,8 +49,7 @@ export const authApi = {
   },
 
   async resetPassword(email: string, newPassword: string) {
-    // Reset password currently may not be fully implemented in Sabbpe auth, but point to it
-    const res = await fetch(`/auth/reset-password`, {
+    const res = await fetch(`${AUTH_API_URL}/auth/reset-password`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: email, newPassword: newPassword })

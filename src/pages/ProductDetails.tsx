@@ -7,7 +7,6 @@ import { productApi } from '../services/productApi'
 
 interface ProductDetailsProps {
   addToCart: (p: Product) => void;
-  setCheckoutOpen: (open: boolean) => void;
   wishlist: Product[];
   toggleWishlist: (p: Product) => void;
   isLoggedIn: boolean;
@@ -15,7 +14,7 @@ interface ProductDetailsProps {
   buyInstinctively: (p: any) => void;
 }
 
-export default function ProductDetails({ addToCart, setCheckoutOpen, wishlist, toggleWishlist, isLoggedIn, setLoginPromptOpen, buyInstinctively }: ProductDetailsProps) {
+export default function ProductDetails({ addToCart, wishlist, toggleWishlist, isLoggedIn, setLoginPromptOpen, buyInstinctively }: ProductDetailsProps) {
   const { id } = useParams()
   const navigate = useNavigate()
   const [product, setProduct] = useState<Product | null>(null)

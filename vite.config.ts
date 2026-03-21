@@ -14,5 +14,15 @@ export default defineConfig({
   },
   server: {
     open: true,
+    proxy: {
+      '/auth': {
+        target: 'http://localhost:8081',
+        changeOrigin: true,
+      },
+      '/api': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+      }
+    }
   },
 });
