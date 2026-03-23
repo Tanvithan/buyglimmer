@@ -27,14 +27,20 @@ export const authApi = {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        name: name,
-        email: email,
-        mobile: phone,
-        password: password
+        token: "",
+        requestId: `REQ-${Date.now()}`,
+        data: {
+          name: name,
+          email: email,
+          password: password,
+          phone: phone
+        }
       })
     });
+    
+    const response = await res.json();  
 
-    const response = await res.json();
+    
 
     if (!res.ok || !response.success) {
       throw new Error(response.message || 'Registration failed');
