@@ -15,11 +15,11 @@ export const productApi = {
     token = newToken;
   },
 
-  async list() {
+  async list(category?: string) {
     const request: ApiRequest<any> = {
       requestId: generateRequestId(),
       token: token || undefined,
-      data: {}
+      data: category ? { category } : {}
     };
 
     const res = await fetch(`${API_BASE}/products/list`, {
@@ -65,7 +65,7 @@ export const productApi = {
     const request: ApiRequest<any> = {
       requestId: generateRequestId(),
       token: token || undefined,
-      data: { query }
+      data: { keyword: query }
     };
 
     const res = await fetch(`${API_BASE}/products/search`, {

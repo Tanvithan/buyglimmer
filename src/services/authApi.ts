@@ -5,7 +5,14 @@ export const authApi = {
     const res = await fetch(`${AUTH_API_URL}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ identifier: email, password: password })
+      body: JSON.stringify({
+        token: "",
+        requestId: `REQ-${Date.now()}`,
+        data: {
+          email: email,
+          password: password
+        }
+      })
     });
 
     const response = await res.json();
